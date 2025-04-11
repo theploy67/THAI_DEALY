@@ -1,9 +1,12 @@
-// import 'package:flutter/material.dart';
-// // import 'home_page.dart';
-// import 'dart:math'; 
-
+// By Fluke page5 login_page
 // // อันนี้เป็นโค้ด log in page ใน Lab10 นะ 
 
+
+
+
+//// import 'package:flutter/material.dart';
+// // import 'home_page.dart';
+// import 'dart:math'; 
 
 // PageRouteBuilder _fadeRoute(Widget page) {
 //   //Task01

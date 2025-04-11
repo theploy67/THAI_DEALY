@@ -1,7 +1,8 @@
-// 📁 lib/widgets/user_navigation.dart
 import 'package:flutter/material.dart';
-import 'package:thai_dealy/pages/user_page/HomeU_page.dart';
-// import other user pages if available
+import 'package:thai_dealy/pages/user_page/HomeU_page.dart'; // หน้า Home
+import 'package:thai_dealy/pages/user_page/All_NoteU_page.dart'; // หน้า All Note
+import 'package:thai_dealy/pages/user_page/SearchU_page.dart'; // หน้า Search
+import 'package:thai_dealy/pages/user_page/AboutUs_page.dart'; // หน้า About Us
 
 class UserNavigationPage extends StatefulWidget {
   @override
@@ -11,11 +12,12 @@ class UserNavigationPage extends StatefulWidget {
 class _UserNavigationPageState extends State<UserNavigationPage> {
   int _selectedIndex = 0;
 
+  // เพิ่มหน้า SearchU_page และ AboutUs_page
   final List<Widget> _pages = [
-    const HomeUPage(),
-    // const UserSearchPage(),
-    // const UserNotePage(),
-    // const UserDashboardPage(),
+    const HomeUPage(), // หน้าแรก
+    // const SearchUPage(), // หน้า Search
+    const AllNoteUPage(), // หน้า All Note
+    const AboutUsPage(), // หน้า About Us
   ];
 
   void _onItemTapped(int index) {
@@ -24,18 +26,18 @@ class _UserNavigationPageState extends State<UserNavigationPage> {
     });
   }
 
-  final List<String> _labels = ['Home', 'Search', 'Note', 'Dashboard'];
+  final List<String> _labels = ['Home', 'Search', 'Note', 'About us'];
   final List<IconData> _icons = [
-    Icons.home,
-    Icons.search,
-    Icons.note_add,
-    Icons.dashboard_customize
+    Icons.home, // ไอคอน Home
+    Icons.search, // ไอคอน Search
+    Icons.note_add, // ไอคอน Note
+    Icons.account_circle, // ไอคอน About Us
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: _pages[_selectedIndex], // แสดงหน้าใหม่ตาม index
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: const BoxDecoration(
@@ -50,7 +52,7 @@ class _UserNavigationPageState extends State<UserNavigationPage> {
           children: List.generate(_icons.length, (index) {
             final isSelected = _selectedIndex == index;
             return GestureDetector(
-              onTap: () => _onItemTapped(index),
+              onTap: () => _onItemTapped(index), // เมื่อกดให้เปลี่ยนหน้า
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -61,7 +63,7 @@ class _UserNavigationPageState extends State<UserNavigationPage> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      _icons[index],
+                      _icons[index], // ไอคอนที่เลือก
                       color: Colors.black,
                     ),
                   ),
