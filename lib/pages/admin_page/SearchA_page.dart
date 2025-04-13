@@ -20,17 +20,17 @@ class _SearchAPageState extends State<SearchAPage> {
     {
       'name': 'Andaman International Clinic',
       'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
-      'image': 'andaman_clinic.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'คลินิกแพทย์ศุภฤกษ์',
       'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
-      'image': 'clinic.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'คลินิกสามพัฒนาชุมชน 2 (หมอศศินา)',
       'address': '179/45 ถนน เสรีพัฒนา 1 ตำบล ตลาดกระทุ่มแบน',
-      'image': 'clinic_2.jpg',
+      'image': 'loca1.png',
     },
     // เพิ่มรายการที่ต้องการ
   ];
@@ -39,17 +39,17 @@ class _SearchAPageState extends State<SearchAPage> {
     {
       'name': 'Andaman International Clinic',
       'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
-      'image': 'andaman_clinic.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'คลินิกแพทย์ศุภฤกษ์',
       'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
-      'image': 'clinic.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'โรงพยาบาลสัตว์ PET CASTLE',
       'address': 'ถนนราชวิถี (ตรงข้ามเซ็นทรัลรัตนาธิเบศร์)',
-      'image': 'pet_castle.jpg',
+      'image': 'loca1.png',
     },
     // เพิ่มรายการที่ต้องการ
   ];
@@ -58,17 +58,17 @@ class _SearchAPageState extends State<SearchAPage> {
     {
       'name': 'คลินิกสัตวแพทย์',
       'address': '111/12 ซอยสามัคคี 8 หมู่ 10 ถนนสุขสวัสดิ์',
-      'image': 'clinic_tags.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'โรงพยาบาลสัตว์จุฬา',
       'address': '26 ถนนจุฬา, แขวงวังใหม่, กรุงเทพ',
-      'image': 'chula_hospital.jpg',
+      'image': 'loca1.png',
     },
     {
       'name': 'คลินิกสัตว์เจริญวัฒนา',
       'address': '29/4 ถนนจรัญสนิทวงศ์, กรุงเทพ',
-      'image': 'clinic_wattana.jpg',
+      'image': 'loca1.png',
     },
     // เพิ่มรายการที่ต้องการ
   ];
@@ -159,7 +159,7 @@ class _SearchAPageState extends State<SearchAPage> {
           margin: const EdgeInsets.symmetric(vertical: 8),
           child: ListTile(
             leading: Image.asset(
-              'lib/widgets/picture/${place['image']}', // ใส่เส้นทางของภาพที่ถูกต้อง
+              'assets/images/${place['image']}', // ใส่เส้นทางของภาพที่ถูกต้อง
               width: 50,
               height: 50,
               fit: BoxFit.cover,

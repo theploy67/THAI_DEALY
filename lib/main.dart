@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:thai_dealy/widgets/admin_navigation.dart'; // ✅ ใช้ชื่อไฟล์ที่มีคลาส AdminNavigationPage
+import 'package:thai_dealy/widgets/admin_navigation.dart'; // ใช้ชื่อไฟล์ที่มีคลาส AdminNavigationPage
 import 'package:thai_dealy/widgets/user_navigation.dart';
 import 'package:thai_dealy/pages/user_page/All_NoteU_page.dart';
 
@@ -18,8 +18,10 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
       ),
-       //home: AdminNavigationPage(), // ✅ ใช้ชื่อคลาส Widget ของหน้า Navigation Admin
-        home: UserNavigationPage(),  // ✅ ใช้ชื่อคลาส Widget ของหน้า Navigation User
+      // กำหนดหน้าเริ่มต้นเป็น AdminNavigationPage
+      home: AdminNavigationPage(), // หากต้องการให้เริ่มที่หน้า Admin
+      // หรือหากต้องการให้เป็น UserNavigationPage ให้ใช้:
+      // home: const UserNavigationPage(), 
     );
   }
 }

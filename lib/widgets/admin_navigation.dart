@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:thai_dealy/pages/admin_page/HomeA_page.dart'; // หน้า Home
 import 'package:thai_dealy/pages/admin_page/SearchA_page.dart'; // หน้า Search
-import 'package:thai_dealy/pages/admin_page/All_NoteA_page.dart'; // หน้า All Note
+import 'package:thai_dealy/pages/admin_page/A_Note.dart'; // หน้า All Note (เปลี่ยนเป็น A_Note)
 import 'package:thai_dealy/pages/admin_page/Dashboard_Page.dart'; // หน้า Dashboard
 import 'package:thai_dealy/pages/admin_page/NoteA_Detail_page.dart'; // หน้า NoteA_Detail_page
 
@@ -17,7 +17,7 @@ class _AdminNavigationPageState extends State<AdminNavigationPage> {
   final List<Widget> _pages = [
     const HomeAPage(), // หน้า Home
     const SearchAPage(), // หน้า Search
-    const AllNoteAPage(), // หน้า All Note
+    const A_Note(), // หน้า All Note (เปลี่ยนเป็น A_Note)
     // const DashboardPage(),   // หน้า Dashboard
   ];
 
@@ -60,9 +60,11 @@ class _AdminNavigationPageState extends State<AdminNavigationPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          (context) =>
-                              const AllNoteAPage(), // ไปยังหน้า AllNoteAPage
+                      builder: (context) => A_Note(),
+                      // หรือหากต้องการใช้ NoteADetailPage
+                      // builder: (context) => NoteADetailPage(
+                      //   dateline: DateTime.now(), // ส่งค่าพารามิเตอร์ที่ต้องการ
+                      // ),
                     ),
                   );
                 } else {
@@ -71,6 +73,7 @@ class _AdminNavigationPageState extends State<AdminNavigationPage> {
                   ); // เปลี่ยนหน้าตามที่เลือกใน BottomNavigationBar
                 }
               },
+
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
