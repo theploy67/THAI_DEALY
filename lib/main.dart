@@ -3,6 +3,7 @@ import 'package:thai_dealy/widgets/admin_navigation.dart'; // ใช้ชื่
 import 'package:thai_dealy/widgets/user_navigation.dart';
 import 'package:thai_dealy/pages/user_page/All_NoteU_page.dart';
 import 'package:thai_dealy/pages/welcome_page.dart';
+import 'package:thai_dealy/pages/homesreen_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +24,8 @@ class MyApp extends StatelessWidget {
       //home: AdminNavigationPage(), // หากต้องการให้เริ่มที่หน้า Admin
       // หรือหากต้องการให้เป็น UserNavigationPage ให้ใช้:
       // home: const UserNavigationPage(), 
-      home: const WelcomeScreen(),
+      home: const WelcomePage(),
+      //home: const HomeScreen(),
     );
   }
 }
