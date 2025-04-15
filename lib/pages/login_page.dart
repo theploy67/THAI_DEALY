@@ -1,14 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-
-PageRouteBuilder _fadeRoute(Widget page) {
-  return PageRouteBuilder(
-    pageBuilder: (context, animation, secondaryAnimation) => page,
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      return FadeTransition(opacity: animation, child: child);
-    },
-  );
-}
+import 'package:thai_dealy/pages/animated_button.dart'; // ถ้ามีไฟล์นี้
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -39,7 +31,7 @@ class _LoginPageState extends State<LoginPage>
   void _login() {
     if (usernameController.text == "admin" &&
         passwordController.text == "1234") {
-      // Navigator.of(context).pushReplacement(_fadeRoute(HomeScreen()));
+      Navigator.pushReplacementNamed(context, '/homeU');
     } else {
       _shakeController.forward(from: 0);
     }
@@ -53,12 +45,12 @@ class _LoginPageState extends State<LoginPage>
       body: SafeArea(
         child: Stack(
           children: [
-            // พื้นหลังเหลืองโค้งล่าง
+            // พื้นหลังเหลืองด้านล่าง
             Positioned(
               top: 300,
               left: 0,
               right: 0,
-              bottom: 0, // ให้เต็มถึงล่าง
+              bottom: 0,
               child: Container(
                 decoration: const BoxDecoration(
                   color: Color(0xFFF3CC54),
@@ -70,48 +62,38 @@ class _LoginPageState extends State<LoginPage>
               ),
             ),
 
-            // เนื้อหาทั้งหมดที่ scroll ได้
+            // เนื้อหา Scroll ได้
             SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight:
-                      MediaQuery.of(context).size.height, // ดันความสูงให้พอดีจอ
-                ),
+                    minHeight: MediaQuery.of(context).size.height),
                 child: Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header bar
+                      // Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: const [
                           Icon(Icons.arrow_back),
-                          Text(
-                            'Login',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w500),
-                          ),
+                          Text('Login',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w500)),
                         ],
                       ),
-
                       const SizedBox(height: 50),
-                      const Text(
-                        'Login',
-                        style: TextStyle(
-                            fontSize: 40, fontWeight: FontWeight.w700),
-                      ),
+                      const Text('Login',
+                          style: TextStyle(
+                              fontSize: 40, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 10),
-                      const Text(
-                        'Please login to continue.',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-
+                      const Text('Please login to continue.',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500)),
                       const SizedBox(height: 150),
 
-                      // กล่องสั่น
+                      // Animation Shake
                       AnimatedBuilder(
                         animation: _shakeController,
                         builder: (context, child) {
@@ -123,70 +105,17 @@ class _LoginPageState extends State<LoginPage>
                         },
                         child: Column(
                           children: [
-                            // Email field
-                            Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 30),
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF4EFE9),
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              child: TextField(
-                                controller: usernameController,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Email",
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 24),
-                                ),
-                              ),
-                            ),
+                            _inputField(
+                                hint: "Email", controller: usernameController),
                             const SizedBox(height: 20),
-
-                            // Password field
-                            Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 30),
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF4EFE9),
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              child: TextField(
+                            _inputField(
+                                hint: "Password",
                                 controller: passwordController,
-                                obscureText: true,
-                                decoration: const InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "Password",
-                                  contentPadding:
-                                      EdgeInsets.symmetric(vertical: 24),
-                                ),
-                              ),
-                            ),
+                                obscure: true),
                             const SizedBox(height: 60),
-
-                            // Login Button
-                            SizedBox(
-                              width: double.infinity,
-                              height: 80,
-                              child: ElevatedButton(
-                                onPressed: _login,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.black,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(40),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Login',
-                                  style: TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
+                            AnimatedButton(
+                              text: 'Login',
+                              onPressed: _login,
                             ),
                           ],
                         ),
@@ -194,36 +123,55 @@ class _LoginPageState extends State<LoginPage>
 
                       const SizedBox(height: 30),
 
-                      // Sign up link
+                      // Sign Up link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            "Don’t have an account? ",
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                          const Text("Don’t have an account? ",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16)),
                           GestureDetector(
-                            onTap: () {
-                              // TODO: push to SignUpPage
-                            },
-                            child: const Text(
-                              "Sign Up",
-                              style: TextStyle(
-                                color: Color(0xFF333EB9),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                decoration: TextDecoration.underline,
-                              ),
-                            ),
+                            onTap: () =>
+                                Navigator.pushNamed(context, '/signup'),
+                            child: const Text("Sign Up",
+                                style: TextStyle(
+                                    color: Color(0xFF333EB9),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    decoration: TextDecoration.underline)),
                           ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _inputField({
+    required String hint,
+    required TextEditingController controller,
+    bool obscure = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      height: 80,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4EFE9),
+        borderRadius: BorderRadius.circular(40),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: obscure,
+        decoration: InputDecoration(
+          hintText: hint,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(vertical: 24),
         ),
       ),
     );
