@@ -1,5 +1,5 @@
-// By Fluke page7 welcome_page
 import 'package:flutter/material.dart';
+import 'package:thai_dealy/pages/animated_button.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -9,14 +9,11 @@ class WelcomePage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // พื้นหลังขาว
           Container(
             width: double.infinity,
             height: double.infinity,
             color: Colors.white,
           ),
-
-          // โลโก้
           Positioned(
             top: 140,
             left: 0,
@@ -24,7 +21,7 @@ class WelcomePage extends StatelessWidget {
             child: Column(
               children: [
                 Image.asset(
-                  'assets/images/THAI DR.png', // 🔁 ใช้โลโก้ของคุณ
+                  'assets/images/THAI DR.png',
                   width: 170,
                   height: 170,
                   fit: BoxFit.contain,
@@ -33,8 +30,6 @@ class WelcomePage extends StatelessWidget {
               ],
             ),
           ),
-
-          // พื้นหลังครึ่งล่างโค้ง + เนื้อหา
           Positioned(
             bottom: 0,
             child: Container(
@@ -69,58 +64,28 @@ class WelcomePage extends StatelessWidget {
                         fontFamily: 'Inter',
                       ),
                     ),
-                    // แทน Spacer() ด้วย SizedBox เพื่อควบคุมระยะห่าง
                     const SizedBox(height: 90),
-
-                    // ปุ่ม LogIn / Sign Up
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // LogIn Button
                         SizedBox(
-                          width: 140, // ✅ ทำให้ขนาดเท่ากับ Sign Up
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text(
-                              'LogIn',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                                fontFamily: 'Inter',
-                              ),
-                            ),
+                          width: 140,
+                          child: AnimatedButton(
+                            text: 'LogIn',
+                            isDark: true,
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/login');
+                            },
                           ),
                         ),
-
-                        // Sign Up Button
                         SizedBox(
-                          width: 140, // ✅ เท่ากันกับ LogIn
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(40),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                            ),
-                            child: const Text(
-                              'Sign Up',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                                fontFamily: 'Inter',
-                              ),
-                            ),
+                          width: 140,
+                          child: AnimatedButton(
+                            text: 'Sign Up',
+                            isDark: false,
+                            onPressed: () {
+                              Navigator.pushNamed(context, '/signup');
+                            },
                           ),
                         ),
                       ],
