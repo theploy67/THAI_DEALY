@@ -12,7 +12,6 @@ class SignUpPage extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // พื้นหลังสีเหลือง
             Positioned(
               top: 250,
               left: 0,
@@ -28,20 +27,22 @@ class SignUpPage extends StatelessWidget {
                 ),
               ),
             ),
-
-            // เนื้อหาที่ scroll ได้
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Icon(Icons.arrow_back),
-                        Text('Sign UP',
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back),
+                          onPressed: () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
+                        ),
+                        const Text('Sign UP',
                             style: TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.w500)),
                       ],
@@ -49,18 +50,12 @@ class SignUpPage extends StatelessWidget {
                     const SizedBox(height: 50),
                     const Text('Sign Up',
                         style: TextStyle(
-                            fontSize: 40,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black)),
+                            fontSize: 40, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 10),
                     const Text('Please Sign up to continue.',
                         style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black)),
+                            fontSize: 16, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 60),
-
-                    // Input fields
                     _inputField(hint: "Username"),
                     const SizedBox(height: 20),
                     _inputField(hint: "Email"),
@@ -69,41 +64,31 @@ class SignUpPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _inputField(hint: "Confirm Password", obscure: true),
                     const SizedBox(height: 40),
-
-                    // Button
                     AnimatedButton(
                       text: 'Sign Up',
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/login');
-                      },
+                      onPressed: () =>
+                          Navigator.pushReplacementNamed(context, '/login'),
                       isDark: true,
                     ),
-
                     const SizedBox(height: 30),
-
-                    // Login link
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Already have an account? ",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
+                        const Text("Already have an account? ",
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 16)),
                         GestureDetector(
                           onTap: () => Navigator.pushNamed(context, '/login'),
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Color(0xFF333EB9),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              decoration: TextDecoration.underline,
-                            ),
-                          ),
+                          child: const Text("Login",
+                              style: TextStyle(
+                                color: Color(0xFF333EB9),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                decoration: TextDecoration.underline,
+                              )),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 30), // กันชนล่างป้องกันล้น
                   ],
                 ),
               ),
@@ -114,7 +99,6 @@ class SignUpPage extends StatelessWidget {
     );
   }
 
-  // กล่องกรอกข้อมูล
   Widget _inputField({required String hint, bool obscure = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 30),
