@@ -26,13 +26,14 @@ class MyApp extends StatelessWidget {
       //home: AdminNavigationPage(), // หากต้องการให้เริ่มที่หน้า Admin
       // หรือหากต้องการให้เป็น UserNavigationPage ให้ใช้:
       //home: const UserNavigationPage(),
-      initialRoute: '/welcome',
+      initialRoute: '/home',
       routes: {
         '/welcome': (context) => const WelcomePage(),
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignUpPage(),
         '/home': (context) => const HomeScreen(),
         '/homeU': (context) => UserNavigationPage(),
+        '/homeA': (context) => AdminNavigationPage(),
       },
     );
   }
