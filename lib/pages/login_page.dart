@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:thai_dealy/pages/animated_button.dart'; // ถ้ามีไฟล์นี้
+import 'package:thai_dealy/pages/animated_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -29,8 +29,12 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _login() {
-    if (usernameController.text == "admin" &&
-        passwordController.text == "1234") {
+    final user = usernameController.text;
+    final pass = passwordController.text;
+
+    if (user == 'admin' && pass == '1234') {
+      Navigator.pushReplacementNamed(context, '/homeA');
+    } else if (user == 'user' && pass == '1234') {
       Navigator.pushReplacementNamed(context, '/homeU');
     } else {
       _shakeController.forward(from: 0);
@@ -76,11 +80,19 @@ class _LoginPageState extends State<LoginPage>
                       // Header
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Icon(Icons.arrow_back),
-                          Text('Login',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500)),
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back),
+                            onPressed: () {
+                              Navigator.pushReplacementNamed(
+                                  context, '/welcome');
+                            },
+                          ),
+                          const Text(
+                            'Login',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.w500),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 50),
@@ -116,6 +128,7 @@ class _LoginPageState extends State<LoginPage>
                             AnimatedButton(
                               text: 'Login',
                               onPressed: _login,
+                              isDark: true,
                             ),
                           ],
                         ),
