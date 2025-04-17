@@ -1,9 +1,6 @@
-// By Fluke page1
-// หน้านี้มี Tab bar ด้านบนไว้้หมดแล้ว (สำหรับ Top, Accounts, Tags)
-// สิ่งที่ต้องแก้ : ตอนนี้ยังบัคอยู่ ยังไม่ได้แก้
-
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SearchAPage extends StatefulWidget {
   const SearchAPage({super.key});
@@ -13,125 +10,153 @@ class SearchAPage extends StatefulWidget {
 }
 
 class _SearchAPageState extends State<SearchAPage> {
-  String searchQuery = ''; // ตัวแปรสำหรับการค้นหา
+  String searchQuery = '';
 
-  // รายการของสถานที่ (สำหรับ Top, Accounts, Tags)
   final List<Map<String, String>> topPlaces = [
     {
       'name': 'Andaman International Clinic',
-      'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
+      'address':
+          'Andaman International Clinic Klong Nin 33-33/1 ตำบล เกาะลันตาใหญ่ อำเภอเกาะลันตา กระบี่ 81150',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกแพทย์ศุภฤกษ์',
-      'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
+      'address':
+          'แพทย์ศุภฤกษ์ คลินิกกระดูกและข้อ จันทบุรี 226 97 ตำบล ท่าช้าง อ.เมือง จันทบุรี 22000',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกสามพัฒนาชุมชน 2 (หมอศศินา)',
-      'address': '179/45 ถนน เสรีพัฒนา 1 ตำบล ตลาดกระทุ่มแบน',
+      'address':
+          '179/45 ถนน เศรษฐกิจ 1, ตำบล ตลาดกระทุ่มแบน, อำเภอกระทุ่มแบน 74110 สมุทรสาคร',
       'image': 'loca1.png',
     },
-    // เพิ่มรายการที่ต้องการ
   ];
 
   final List<Map<String, String>> accountsPlaces = [
     {
-      'name': 'Andaman International Clinic',
-      'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
-      'image': 'loca1.png',
-    },
-    {
-      'name': 'คลินิกแพทย์ศุภฤกษ์',
-      'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
-      'image': 'loca1.png',
-    },
-    {
       'name': 'โรงพยาบาลสัตว์ PET CASTLE',
-      'address': 'ถนนราชวิถี (ตรงข้ามเซ็นทรัลรัตนาธิเบศร์)',
-      'image': 'loca1.png',
-    },
-    // เพิ่มรายการที่ต้องการ
-  ];
-
-  final List<Map<String, String>> tagsPlaces = [
-    {
-      'name': 'คลินิกสัตวแพทย์',
-      'address': '111/12 ซอยสามัคคี 8 หมู่ 10 ถนนสุขสวัสดิ์',
+      'address': 'นนทบุรี',
       'image': 'loca1.png',
     },
     {
       'name': 'โรงพยาบาลสัตว์จุฬา',
-      'address': '26 ถนนจุฬา, แขวงวังใหม่, กรุงเทพ',
+      'address': 'กรุงเทพฯ',
+      'image': 'loca1.png',
+    },
+  ];
+
+  final List<Map<String, String>> tagsPlaces = [
+    {
+      'name': 'คลินิกสัตวแพทย์ A',
+      'address': 'ถนนสุขสวัสดิ์',
       'image': 'loca1.png',
     },
     {
-      'name': 'คลินิกสัตว์เจริญวัฒนา',
-      'address': '29/4 ถนนจรัญสนิทวงศ์, กรุงเทพ',
+      'name': 'คลินิกสัตวแพทย์ B',
+      'address': 'กรุงเทพฯ',
       'image': 'loca1.png',
     },
-    // เพิ่มรายการที่ต้องการ
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFF8F0),
       appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
-        title: const Text("Explore"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // กลับไปหน้าก่อนหน้า
-          },
-        ),
+        backgroundColor: const Color(0xFFDE712C),
+        title: const Text("Explore", style: TextStyle(color: Colors.black)),
+        centerTitle: true,
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // ช่องค้นหาข้อมูล
+            const Gap(8),
             Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Search...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const Gap(10),
-            // TabBar สำหรับการแยกหมวดหมู่
-            DefaultTabController(
-              length: 3,
-              child: Column(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
                 children: [
-                  const TabBar(
-                    tabs: [
-                      Tab(text: 'Top'),
-                      Tab(text: 'Accounts'),
-                      Tab(text: 'Tags'),
-                    ],
+                  Expanded(
+                    child: Container(
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 213, 213, 213),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.search, color: Colors.black54),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              onChanged: (value) {
+                                setState(() {
+                                  searchQuery = value;
+                                });
+                              },
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: 'Search',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  SizedBox(
-                    height: 400, // แสดงพื้นที่สำหรับเนื้อหาของแต่ละแท็บ
-                    child: TabBarView(
-                      children: [
-                        // **Top** Tab
-                        _buildPlaceList(topPlaces),
-                        // **Accounts** Tab
-                        _buildPlaceList(accountsPlaces),
-                        // **Tags** Tab
-                        _buildPlaceList(tagsPlaces),
-                      ],
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        searchQuery = '';
+                      });
+                    },
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+            const Gap(10),
+            Expanded(
+              child: DefaultTabController(
+                length: 3,
+                child: Column(
+                  children: [
+                    const TabBar(
+                      labelColor: Colors.black,
+                      indicatorColor: Colors.black,
+                      tabs: [
+                        Tab(text: 'Top'),
+                        Tab(text: 'Accounts'),
+                        Tab(text: 'Tags'),
+                      ],
+                    ),
+                    const Gap(5),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          _buildPlaceList(topPlaces),
+                          _buildPlaceList(accountsPlaces),
+                          _buildPlaceList(tagsPlaces),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -141,40 +166,71 @@ class _SearchAPageState extends State<SearchAPage> {
   }
 
   Widget _buildPlaceList(List<Map<String, String>> places) {
-    // กรองข้อมูลที่ตรงกับคำค้น
-    final filteredPlaces =
-        places
-            .where(
-              (place) => place['name']!.toLowerCase().contains(
-                searchQuery.toLowerCase(),
-              ),
-            )
-            .toList();
+    final filtered = places
+        .where((p) => p['name']!
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase()))
+        .toList();
 
     return ListView.builder(
-      itemCount: filteredPlaces.length,
+      itemCount: filtered.length,
       itemBuilder: (context, index) {
-        final place = filteredPlaces[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            leading: Image.asset(
-              'assets/images/${place['image']}', // ใส่เส้นทางของภาพที่ถูกต้อง
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            ),
-            title: Text(place['name']!),
-            subtitle: Text(place['address']!),
-            trailing: IconButton(
-              icon: const Icon(Icons.location_on),
-              onPressed: () {
-                // การดำเนินการเมื่อกดไอคอนตำแหน่ง
-              },
-            ),
+        final place = filtered[index];
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.shade300,
+                blurRadius: 6,
+                offset: const Offset(2, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              ListTile(
+                title: Text(
+                  place['name']!,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(place['address']!),
+                trailing: IconButton(
+                  icon: const Icon(Icons.location_on_outlined),
+                  onPressed: () {
+                    _openMap(place['address']!);
+                  },
+                ),
+              ),
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(12)),
+                child: Image.asset(
+                  'assets/images/${place['image']}',
+                  height: 120,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  Future<void> _openMap(String address) async {
+    final Uri url = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่สามารถเปิด Google Maps ได้')),
+        );
+      }
+    }
   }
 }
