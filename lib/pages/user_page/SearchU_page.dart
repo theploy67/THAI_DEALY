@@ -1,6 +1,6 @@
-// By Fluke page3 SearchU_page
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SearchUPage extends StatefulWidget {
   const SearchUPage({super.key});
@@ -15,53 +15,46 @@ class _SearchUPageState extends State<SearchUPage> {
   final List<Map<String, String>> topPlaces = [
     {
       'name': 'Andaman International Clinic',
-      'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
+      'address':
+          'Andaman International Clinic Klong Nin 33-33/1 ตำบล เกาะลันตาใหญ่ อำเภอเกาะลันตา กระบี่ 81150',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกแพทย์ศุภฤกษ์',
-      'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
+      'address':
+          'แพทย์ศุภฤกษ์ คลินิกกระดูกและข้อ จันทบุรี 226 97 ตำบล ท่าช้าง อ.เมือง จันทบุรี 22000',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกสามพัฒนาชุมชน 2 (หมอศศินา)',
-      'address': '179/45 ถนน เสรีพัฒนา 1 ตำบล ตลาดกระทุ่มแบน',
+      'address':
+          '179/45 ถนน เศรษฐกิจ 1, ตำบล ตลาดกระทุ่มแบน, อำเภอกระทุ่มแบน 74110 สมุทรสาคร',
       'image': 'loca1.png',
     },
   ];
 
   final List<Map<String, String>> accountsPlaces = [
     {
-      'name': 'Andaman International Clinic',
-      'address': '51 18, Ko Yao Noi, Ko Yao District, Phang Nga 82160',
-      'image': 'loca1.png',
-    },
-    {
-      'name': 'คลินิกแพทย์ศุภฤกษ์',
-      'address': '913 13 The Muang, Tha Muang District, Kanchanaburi 71110',
-      'image': 'loca1.png',
-    },
-    {
       'name': 'โรงพยาบาลสัตว์ PET CASTLE',
-      'address': 'ถนนราชวิถี (ตรงข้ามเซ็นทรัลรัตนาธิเบศร์)',
+      'address': 'นนทบุรี',
+      'image': 'loca1.png',
+    },
+    {
+      'name': 'โรงพยาบาลสัตว์จุฬา',
+      'address': 'กรุงเทพฯ',
       'image': 'loca1.png',
     },
   ];
 
   final List<Map<String, String>> tagsPlaces = [
     {
-      'name': 'คลินิกสัตวแพทย์',
-      'address': '111/12 ซอยสามัคคี 8 หมู่ 10 ถนนสุขสวัสดิ์',
+      'name': 'คลินิกสัตวแพทย์ A',
+      'address': 'ถนนสุขสวัสดิ์',
       'image': 'loca1.png',
     },
     {
-      'name': 'โรงพยาบาลสัตว์จุฬา',
-      'address': '26 ถนนจุฬา, แขวงวังใหม่, กรุงเทพ',
-      'image': 'loca1.png',
-    },
-    {
-      'name': 'คลินิกสัตว์เจริญวัฒนา',
-      'address': '29/4 ถนนจรัญสนิทวงศ์, กรุงเทพ',
+      'name': 'คลินิกสัตวแพทย์ B',
+      'address': 'กรุงเทพฯ',
       'image': 'loca1.png',
     },
   ];
@@ -72,10 +65,6 @@ class _SearchUPageState extends State<SearchUPage> {
       backgroundColor: const Color(0xFFFFF8F0),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFD966),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
         title: const Text("Explore", style: TextStyle(color: Colors.black)),
         centerTitle: true,
       ),
@@ -178,7 +167,9 @@ class _SearchUPageState extends State<SearchUPage> {
 
   Widget _buildPlaceList(List<Map<String, String>> places) {
     final filtered = places
-        .where((p) => p['name']!.toLowerCase().contains(searchQuery.toLowerCase()))
+        .where((p) => p['name']!
+            .toLowerCase()
+            .contains(searchQuery.toLowerCase()))
         .toList();
 
     return ListView.builder(
@@ -208,11 +199,14 @@ class _SearchUPageState extends State<SearchUPage> {
                 subtitle: Text(place['address']!),
                 trailing: IconButton(
                   icon: const Icon(Icons.location_on_outlined),
-                  onPressed: () {},
+                  onPressed: () {
+                    _openMap(place['address']!);
+                  },
                 ),
               ),
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(12)),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(12)),
                 child: Image.asset(
                   'assets/images/${place['image']}',
                   height: 120,
@@ -225,5 +219,18 @@ class _SearchUPageState extends State<SearchUPage> {
         );
       },
     );
+  }
+
+  Future<void> _openMap(String address) async {
+    final Uri url = Uri.parse(
+        'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}');
+
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่สามารถเปิด Google Maps ได้')),
+        );
+      }
+    }
   }
 }
