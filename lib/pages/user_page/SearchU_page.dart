@@ -67,6 +67,7 @@ class _SearchUPageState extends State<SearchUPage> {
         backgroundColor: const Color(0xFFFFD966),
         title: const Text("Explore", style: TextStyle(color: Colors.black)),
         centerTitle: true,
+        automaticallyImplyLeading: false, //ปิดปุ่มลูกศรย้อนกลับ
       ),
       body: SafeArea(
         child: Column(
