@@ -67,6 +67,7 @@ class _SearchAPageState extends State<SearchAPage> {
         backgroundColor: const Color(0xFFDE712C),
         title: const Text("Explore", style: TextStyle(color: Colors.black)),
         centerTitle: true,
+        automaticallyImplyLeading: false, // ปิดปุ่มลูกศรย้อนกลับ
       ),
       body: SafeArea(
         child: Column(
