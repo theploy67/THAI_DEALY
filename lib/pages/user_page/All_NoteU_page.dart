@@ -44,38 +44,16 @@ class _AllNoteUPageState extends State<AllNoteUPage> {
         child: Column(
           children: [
             // ช่องค้นหาข้อมูล
-            Container(
-              height: 48,
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 213, 213, 213),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  const Icon(Icons.search, color: Colors.black54),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                        });
-                      },
-                      decoration: const InputDecoration(
-                        border: InputBorder.none,
-                        hintText: 'Search Note....',
-                        hintStyle: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                        ),
-                      ),
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                  ),
-                ],
+            TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search Note....',
+                border: OutlineInputBorder(),
               ),
             ),
             const Gap(20),

@@ -1,90 +1,116 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-
+import 'dart:convert';
 
 class NoteADetailPage extends StatefulWidget {
-  final DateTime dateline;
-
-  NoteADetailPage({super.key, required this.dateline});
+  final Map<String, dynamic> note;
+  const NoteADetailPage({super.key, required this.note});
 
   @override
   State<NoteADetailPage> createState() => _NoteADetailPageState();
 }
 
 class _NoteADetailPageState extends State<NoteADetailPage> {
-  final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _createdByController = TextEditingController();
-  final TextEditingController _sentForController = TextEditingController();
-  final TextEditingController _contactController = TextEditingController();
-  final TextEditingController _linkMapController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _telController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  late TextEditingController _titleController;
+  late TextEditingController _createdByController;
+  late TextEditingController _sentForController;
+  late TextEditingController _contactController;
+  late TextEditingController _linkMapController;
+  late TextEditingController _addressController;
+  late TextEditingController _telController;
+  late TextEditingController _descriptionController;
 
   late DateTime _lastModifiedDate;
   late DateTime _datelineDate;
 
+  bool _isEditing = false;
+
+  String _status = 'Normal';
+  String _company = 'บริษัทA';
+  String _category = 'ติดตั้งเครื่อง';
+
   @override
   void initState() {
     super.initState();
-    _lastModifiedDate = DateTime.now();
-    _datelineDate = widget.dateline;
+    _titleController = TextEditingController(text: widget.note['title'] ?? '');
+    _createdByController = TextEditingController(text: widget.note['created_by'] ?? '');
+    _sentForController = TextEditingController(text: widget.note['sent_for'] ?? '');
+    _contactController = TextEditingController(text: widget.note['contact'] ?? '');
+    _linkMapController = TextEditingController(text: widget.note['link_map'] ?? '');
+    _addressController = TextEditingController(text: widget.note['address'] ?? '');
+    _telController = TextEditingController(text: widget.note['tel'] ?? '');
+    _descriptionController = TextEditingController(text: widget.note['description'] ?? '');
+
+    _lastModifiedDate = DateTime.tryParse(widget.note['last_modified'] ?? '') ?? DateTime.now();
+    _datelineDate = DateTime.tryParse(widget.note['dateline'] ?? '') ?? DateTime.now();
+
+    // กำหนดค่าเริ่มต้นสำหรับสถานะ, บริษัท, และหมวดหมู่จากข้อมูลที่ได้รับ
+    _status = widget.note['status'] ?? 'Normal';
+    _company = widget.note['company'] ?? 'บริษัทA';
+    _category = widget.note['category'] ?? 'ติดตั้งเครื่อง';
   }
 
-  Future<void> _saveNote() async {
-    if (_titleController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill in the title")),
-      );
-      return;
-    }
-
-    final url = Uri.parse("https://your-api-url.com/notes");
+  Future<void> _updateNote() async {
+    final url = Uri.parse("http://172.20.10.6:3000/notes/${widget.note['id']}");
 
     try {
-      final response = await http.post(
+      final response = await http.put(
         url,
-        body: {
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
           'title': _titleController.text,
-          'Created By': _createdByController.text,
-          'Last Modified': _lastModifiedDate.toIso8601String(),
-          'Dateline': _datelineDate.toIso8601String(),
-          'Sent For': _sentForController.text,
+          'created_by': _createdByController.text,
+          'last_modified': _lastModifiedDate.toIso8601String(),
+          'dateline': _datelineDate.toIso8601String(),
+          'sent_for': _sentForController.text,
+          'contact': _contactController.text,
+          'link_map': _linkMapController.text,
           'address': _addressController.text,
           'tel': _telController.text,
-          'Contact': _contactController.text,
-          'Link Map': _linkMapController.text,
           'description': _descriptionController.text,
-        },
+          'status': _status,
+          'company': _company,
+          'category': _category,
+        }),
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Saved successfully")),
-        );
-        Navigator.pop(context);
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Updated successfully")));
+        setState(() {
+          _isEditing = false;
+        });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to save")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Failed to update")));
       }
     } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An error occurred")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("An error occurred")));
     }
   }
 
-  void _cancelInput() {
-    _titleController.clear();
-    _createdByController.clear();
-    _sentForController.clear();
-    _contactController.clear();
-    _linkMapController.clear();
-    _addressController.clear();
-    _telController.clear();
-    _descriptionController.clear();
+  void _cancelEdit() {
+    setState(() {
+      _isEditing = false;
+      _titleController.text = widget.note['title'] ?? '';
+      _createdByController.text = widget.note['created_by'] ?? '';
+      _sentForController.text = widget.note['sent_for'] ?? '';
+      _contactController.text = widget.note['contact'] ?? '';
+      _linkMapController.text = widget.note['link_map'] ?? '';
+      _addressController.text = widget.note['address'] ?? '';
+      _telController.text = widget.note['tel'] ?? '';
+      _descriptionController.text = widget.note['description'] ?? '';
+      _lastModifiedDate = DateTime.tryParse(widget.note['last_modified'] ?? '') ?? DateTime.now();
+      _datelineDate = DateTime.tryParse(widget.note['dateline'] ?? '') ?? DateTime.now();
+      _status = widget.note['status'] ?? 'Normal';
+      _company = widget.note['company'] ?? 'บริษัทA';
+      _category = widget.note['category'] ?? 'ติดตั้งเครื่อง';
+    });
   }
 
   Future<void> _pickDate({required bool isDateline}) async {
@@ -110,11 +136,22 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Add Note"),
+        title: const Text("Note Detail"),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              setState(() {
+                _isEditing = true;
+              });
+            },
+            tooltip: 'Edit Note',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -124,33 +161,48 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
               _buildTextField("Title", _titleController),
               _buildTextField("Created By", _createdByController),
               _buildDateRow("Last Modified", _lastModifiedDate, () {
-                _pickDate(isDateline: false);
+                if (_isEditing) _pickDate(isDateline: false);
               }),
               _buildDateRow("Dateline", _datelineDate, () {
-                _pickDate(isDateline: true);
+                if (_isEditing) _pickDate(isDateline: true);
               }),
               _buildTextField("Sent For", _sentForController),
               _buildTextField("Contact", _contactController),
               _buildTextField("Link Map", _linkMapController),
               _buildTextField("Address", _addressController),
               _buildTextField("Tel", _telController),
-              _buildTextField("Description / Remark", _descriptionController, maxLines: 4),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: _saveNote,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                    child: const Text("Save"),
-                  ),
-                  ElevatedButton(
-                    onPressed: _cancelInput,
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                    child: const Text("Cancel"),
-                  ),
-                ],
+              _buildTextField(
+                "Description / Remark",
+                _descriptionController,
+                maxLines: 4,
               ),
+
+              // การแสดงสถานะ
+              _buildTextField("Status", TextEditingController(text: _status), readOnly: true),
+              _buildTextField("Company", TextEditingController(text: _company), readOnly: true),
+              _buildTextField("Category", TextEditingController(text: _category), readOnly: true),
+
+              const SizedBox(height: 24),
+              if (_isEditing)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _updateNote,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text("Save"),
+                    ),
+                    ElevatedButton(
+                      onPressed: _cancelEdit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                      ),
+                      child: const Text("Cancel"),
+                    ),
+                  ],
+                ),
             ],
           ),
         ),
@@ -158,12 +210,18 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    bool readOnly = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
+        readOnly: readOnly, // ปรับให้เป็นอ่านได้เมื่อไม่อยู่ในโหมดแก้ไข
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -180,10 +238,11 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
           Expanded(
             child: Text("$label: ${DateFormat('yyyy-MM-dd').format(date)}"),
           ),
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: onPressed,
-          ),
+          if (_isEditing)
+            IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: onPressed,
+            ),
         ],
       ),
     );

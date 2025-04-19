@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:thai_dealy/pages/admin_page/HomeA_page.dart'; // หน้า Home
 import 'package:thai_dealy/pages/admin_page/SearchA_page.dart'; // หน้า Search
 import 'package:thai_dealy/pages/admin_page/A_Note.dart'; // หน้า All Note (เปลี่ยนเป็น A_Note)
-import 'package:thai_dealy/pages/admin_page/Dashboard_Page.dart'; // หน้า Dashboard
-import 'package:thai_dealy/pages/admin_page/NoteA_Detail_page.dart'; // หน้า NoteA_Detail_page
+// import 'package:thai_dealy/pages/admin_page/Dashboard_Page.dart'; // หน้า Dashboard
+import 'package:thai_dealy/pages/admin_page/NoteA_Detail_page.dart';
+import 'package:thai_dealy/pages/admin_page/dashboard_page.dart'; // หน้า NoteA_Detail_page
 
 class AdminNavigationPage extends StatefulWidget {
   @override
@@ -18,7 +19,7 @@ class _AdminNavigationPageState extends State<AdminNavigationPage> {
     const HomeAPage(), // หน้า Home
     const SearchAPage(), // หน้า Search
     const A_Note(), // หน้า All Note (เปลี่ยนเป็น A_Note)
-    // const DashboardPage(),   // หน้า Dashboard
+    const DashboardPage(),   // หน้า Dashboard
   ];
 
   void _onItemTapped(int index) {

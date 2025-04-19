@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:gap/gap.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class HomeAPage extends StatefulWidget {
   const HomeAPage({super.key});
@@ -11,11 +13,84 @@ class HomeAPage extends StatefulWidget {
 
 class _HomeAPageState extends State<HomeAPage> {
   DateTime _selectedDay = DateTime.now();
-  Map<DateTime, String> events = {
-    DateTime.utc(2025, 4, 25): 'Meeting with Ploy - Discuss project details',
-    DateTime.utc(2025, 4, 26): 'Budget Review Meeting',
-    DateTime.utc(2025, 4, 27): 'Office renovation check',
-  };
+  List<dynamic> doNowTasks = []; // งานที่ต้องทำในปัจจุบัน (Do Now)
+  List<dynamic> workPlanTasks = []; // งานตามเวลา (Work Plan)
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTasks(); // ดึงข้อมูลงานเมื่อเริ่มต้น
+  }
+
+  // ฟังก์ชันในการดึงข้อมูล task จาก API
+  Future<void> fetchTasks() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://172.20.10.6:3000/notes'),
+      ); // API ของคุณ
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('Fetched Data: $data'); // ตรวจสอบข้อมูลที่ได้รับ
+
+        setState(() {
+          // กรองข้อมูลตาม status
+          doNowTasks =
+              data
+                  .where((task) => task['status'] == 'Do Now!')
+                  .toList(); // ใช้ 'Do Now!' แทน 'Do Now'
+          workPlanTasks =
+              data
+                  .where((task) => task['status'] == 'Normal')
+                  .toList(); // ใช้ 'Normal'
+        });
+      } else {
+        throw Exception('Failed to load tasks');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  // ฟังก์ชันแสดง Popup เมื่อเลือกวัน
+  void _showEventDialog(DateTime selectedDay) {
+    String event = 'No events for this day'; // ตรวจสอบวันที่มีเหตุการณ์หรือไม่
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Event on ${selectedDay.toLocal()}'),
+          content: Text(event),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Close'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ฟังก์ชันเลือกวันที่จากปฏิทิน
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDay,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2101),
+    );
+
+    if (picked != null && picked != _selectedDay) {
+      setState(() {
+        _selectedDay = picked;
+        fetchTasks(); // ดึงข้อมูลใหม่ที่ตรงกับวันที่เลือก
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,55 +108,40 @@ class _HomeAPageState extends State<HomeAPage> {
           ],
         ),
       ),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Calendar Section
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: TableCalendar(
-                  firstDay: DateTime.utc(2020, 1, 1),
-                  lastDay: DateTime.utc(2030, 12, 31),
-                  focusedDay: _selectedDay,
-                  selectedDayPredicate: (day) {
-                    return isSameDay(_selectedDay, day);
-                  },
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                    });
-                    _showEventDialog(
-                      selectedDay,
-                    ); // เรียกแสดง Popup เมื่อเลือกวันที่
-                  },
-                  headerStyle: const HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                  ),
+              // แสดงปฏิทินและให้เลือกวันที่
+              ListTile(
+                title: Text(
+                  "Selected Date: ${DateFormat('dd MMM yyyy').format(_selectedDay)}",
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: () => _selectDate(context),
                 ),
               ),
 
-              // Task Section (Do Now)
+              // แสดงงานที่ต้องทำตอนนี้ (Do Now)
               const SizedBox(height: 16),
               const Text(
                 "Do Now",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.add_box),
+              ..._buildTaskCards(Icons.add_box, doNowTasks),
 
-              // Work Plan Section
+              // แสดงงานตามเวลา (Work Plan)
               const SizedBox(height: 16),
               const Text(
                 "Work Plan",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.check_box_outlined),
+              ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
 
               // Location Section (Showing images)
               const SizedBox(height: 16),
@@ -110,21 +170,22 @@ class _HomeAPageState extends State<HomeAPage> {
     );
   }
 
-  List<Widget> _buildTaskCards(IconData icon) {
-    final List<Map<String, dynamic>> tasks = [
-      {'status': 'Done', 'color': Colors.grey},
-      {'status': 'Done', 'color': Colors.green},
-      {'status': 'Waiting', 'color': Colors.red},
-    ];
-
+  // ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
+  List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
     return tasks.map((task) {
       return Card(
         margin: const EdgeInsets.symmetric(vertical: 6),
         child: ListTile(
           leading: Icon(icon, size: 40),
-          title: const Text("Do Something"),
-          subtitle: const Text(
-            "913 13 The Muang, Tha Muang\nDistrict,Kanchanaburi 71110",
+          title: Text(task['title']), // แสดง title จากข้อมูล
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Last Modified: ${DateFormat('dd MMM yyyy').format(DateTime.parse(task['last_modified']))}",
+              ), // แสดง last_modified
+              Text("Sent For: ${task['sent_for']}"), // แสดง sent_for
+            ],
           ),
           trailing: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +208,14 @@ class _HomeAPageState extends State<HomeAPage> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: task['color'],
+                  color:
+                      task['status'] == 'Do Now!'
+                          ? Colors
+                              .red // กำหนดสีแดงถ้าสถานะเป็น Do Now
+                          : task['status'] == 'Waiting'
+                          ? Colors
+                              .orange // สีส้มถ้าสถานะเป็น Waiting
+                          : Colors.green, // สีเขียวถ้าสถานะอื่นๆ
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -178,31 +246,6 @@ class _HomeAPageState extends State<HomeAPage> {
           Text(name, textAlign: TextAlign.center),
         ],
       ),
-    );
-  }
-
-  // ฟังก์ชันแสดง Popup เมื่อเลือกวัน
-  void _showEventDialog(DateTime selectedDay) {
-    String event =
-        events[selectedDay] ??
-        'No events for this day'; // ตรวจสอบวันที่มีเหตุการณ์หรือไม่
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Event on ${selectedDay.toLocal()}'),
-          content: Text(event),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Close'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }
