@@ -15,7 +15,7 @@ class _UserNavigationPageState extends State<UserNavigationPage> {
   // เพิ่มหน้า SearchU_page และ AboutUs_page
   final List<Widget> _pages = [
     const HomeUPage(), // หน้าแรก
-    // const SearchUPage(), // หน้า Search
+    const SearchUPage(), // หน้า Search
     const AllNoteUPage(), // หน้า All Note
     const AboutUsPage(), // หน้า About Us
   ];
