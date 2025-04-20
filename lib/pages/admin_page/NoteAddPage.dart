@@ -96,20 +96,27 @@ class _NoteAddPageState extends State<NoteAddPage> {
     Navigator.pop(context);
   }
 
-  Future<void> _pickDateline() async {
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: _datelineDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
+Future<void> _pickDateline() async {
+  final pickedDate = await showDatePicker(
+    context: context,
+    initialDate: _datelineDate,
+    firstDate: DateTime(2020),
+    lastDate: DateTime(2100),
+  );
 
-    if (pickedDate != null) {
-      setState(() {
-        _datelineDate = pickedDate;
-      });
-    }
+  if (pickedDate != null) {
+    setState(() {
+      // เพิ่มเวลาเป็น 23:59
+      _datelineDate = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        23, 59, 0, 0, 0,
+      );
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {

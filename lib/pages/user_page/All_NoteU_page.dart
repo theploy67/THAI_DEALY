@@ -43,169 +43,165 @@ class _AllNoteUPageState extends State<AllNoteUPage> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfWeek = startOfWeek.add(Duration(days: 7));
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 0);
-    final startOfYear = DateTime(now.year, 1, 1);
-    final endOfYear = DateTime(now.year + 1, 1, 0);
+@override
+Widget build(BuildContext context) {
+  final now = DateTime.now();
 
-    final filteredNotes = notes.where((note) {
-      final titleMatch =
-          note['title']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
+  // เริ่มต้นสัปดาห์จากวันอาทิตย์ (วันอาทิตย์ = 0, จันทร์ = 1, ...)
+  final startOfWeek = now.subtract(Duration(days: now.weekday % 7)); // วันอาทิตย์ของสัปดาห์นี้
+  final endOfWeek = startOfWeek.add(Duration(days: 6)); // วันเสาร์ของสัปดาห์นี้
 
-      final date = DateTime.tryParse(note['dateline'] ?? '') ?? DateTime(2000);
+  final startOfMonth = DateTime(now.year, now.month, 1); // วันที่ 1 ของเดือนนี้
+  final endOfMonth = DateTime(now.year, now.month + 1, 0); // วันสุดท้ายของเดือนนี้
+  final startOfYear = DateTime(now.year, 1, 1); // วันที่ 1 มกราคมของปีนี้
+  final endOfYear = DateTime(now.year + 1, 1, 0); // วันที่ 31 ธันวาคมของปีนี้
 
-      bool dateMatch = false;
-      switch (selectedFilter) {
-        case 'สัปดาห์นี้':
-          dateMatch = date.isAfter(startOfWeek) && date.isBefore(endOfWeek);
-          break;
-        case 'เดือนนี้':
-          dateMatch = date.isAfter(startOfMonth) && date.isBefore(endOfMonth);
-          break;
-        case 'ปีนี้':
-          dateMatch = date.isAfter(startOfYear) && date.isBefore(endOfYear);
-          break;
-        default:
-          dateMatch = true;
-      }
+  // กรองโน้ตตามเงื่อนไข title และ date
+  final filteredNotes = notes.where((note) {
+    final titleMatch =
+        note['title']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
 
-      return titleMatch && dateMatch;
-    }).toList();
+    final date = DateTime.tryParse(note['dateline'] ?? '') ?? DateTime(2000);
 
-    filteredNotes.sort((a, b) {
-      final dateA = DateTime.parse(a['dateline'] ?? '2000-01-01');
-      final dateB = DateTime.parse(b['dateline'] ?? '2000-01-01');
-      return dateA.compareTo(dateB);
-    });
+    bool dateMatch = false;
+    switch (selectedFilter) {
+      case 'สัปดาห์นี้':
+        // สัปดาห์นี้เริ่มจากวันอาทิตย์ถึงวันเสาร์
+        dateMatch = date.isAfter(startOfWeek) && date.isBefore(endOfWeek.add(Duration(days: 1))); // เพิ่มวันเสาร์ให้เต็ม
+        break;
+      case 'เดือนนี้':
+        dateMatch = date.isAfter(startOfMonth) && date.isBefore(endOfMonth);
+        break;
+      case 'ปีนี้':
+        dateMatch = date.isAfter(startOfYear) && date.isBefore(endOfYear);
+        break;
+      default:
+        dateMatch = true;
+    }
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFFD966),
-        title: const Text('All Notes'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Dropdown filter
-              DropdownButton<String>(
-                value: selectedFilter,
-                items: ['ทั้งหมด', 'สัปดาห์นี้', 'เดือนนี้', 'ปีนี้']
-                    .map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedFilter = value!;
-                  });
-                },
+    return titleMatch && dateMatch;
+  }).toList();
+
+  filteredNotes.sort((a, b) {
+    final dateA = DateTime.parse(a['dateline'] ?? '2000-01-01');
+    final dateB = DateTime.parse(b['dateline'] ?? '2000-01-01');
+    return dateA.compareTo(dateB); // เปรียบเทียบวันที่ A และ B
+  });
+
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: const Color(0xFFFFD966),
+      title: const Text('All Notes'),
+    ),
+    body: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Dropdown filter
+            DropdownButton<String>(
+              value: selectedFilter,
+              items: ['ทั้งหมด', 'สัปดาห์นี้', 'เดือนนี้', 'ปีนี้']
+                  .map((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedFilter = value!;
+                });
+              },
+            ),
+
+            // Search field
+            TextField(
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value;
+                });
+              },
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.search),
+                hintText: 'Search Notes....',
+                border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 16),
 
-              // Search field
-              TextField(
-                onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
-                },
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  hintText: 'Search Notes....',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
+            // Display filtered notes
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredNotes.length,
+              itemBuilder: (context, index) {
+                final note = filteredNotes[index];
+                final dateline =
+                    DateTime.tryParse(note['dateline'] ?? '') ?? DateTime.now();
+                final lastModified =
+                    DateTime.tryParse(note['last_modified'] ?? '') ?? DateTime.now();
 
-              // Display filtered notes
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: filteredNotes.length,
-                itemBuilder: (context, index) {
-                  final note = filteredNotes[index];
-                  final dateline =
-                      DateTime.tryParse(note['dateline'] ?? '') ?? DateTime.now();
-                  final lastModified =
-                      DateTime.tryParse(note['last_modified'] ?? '') ?? DateTime.now();
+                Color cardColor;
+                if (dateline.isBefore(now.add(Duration(days: 1)))) {
+                  cardColor = Colors.red[100]!; // สีแดงถ้างานต้องทำภายในวันหรือสองวัน
+                } else if (dateline.isBefore(now.add(Duration(days: 7)))) {
+                  cardColor = Colors.yellow[100]!; // สีเหลืองถ้าภายในหนึ่งสัปดาห์
+                } else {
+                  cardColor = Colors.green[100]!; // สีเขียวถ้าไม่เร่งด่วน
+                }
 
-                  Color cardColor;
-                  if (dateline.isBefore(now.add(Duration(days: 1)))) {
-                    cardColor = Colors.red[100]!;
-                  } else if (dateline.isBefore(now.add(Duration(days: 7)))) {
-                    cardColor = Colors.yellow[100]!;
-                  } else {
-                    cardColor = Colors.green[100]!;
-                  }
-
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    color: cardColor,
-                    child: ListTile(
-                      title: Text(note['title']),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text("Last Modified: ${DateFormat('dd MMM yyyy').format(lastModified)}"),
-                          Text("Sent For: ${note['sent_for']}"),
-                          Text("Status: ${note['status']}"),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // ลบปุ่ม "Delete" สำหรับ User
-                          // IconButton(
-                          //   icon: const Icon(
-                          //     Icons.delete,
-                          //     color: Color.fromARGB(255, 56, 56, 56),
-                          //   ),
-                          //   onPressed: () {
-                          //     _deleteNote(note['id'], note['title']);
-                          //   },
-                          // ),
-                          IconButton(
-                            icon: const Icon(Icons.arrow_forward),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => NoteUDetailPage(note: note),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  color: cardColor,
+                  child: ListTile(
+                    title: Text(note['title']),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Last Modified: ${DateFormat('dd MMM yyyy').format(lastModified)}"),
+                        Text("Sent For: ${note['sent_for']}"),
+                        Text("Status: ${note['status']}"),
+                      ],
                     ),
-                  );
-                },
-              ),
-            ],
-          ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => NoteUDetailPage(note: note),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => NoteAddPage(dateline: DateTime.now()),
-            ),
-          );
-        },
-        backgroundColor: const Color(0xFFDE712C),
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NoteAddPage(dateline: DateTime.now()),
+          ),
+        );
+      },
+      backgroundColor: const Color(0xFFDE712C),
+      child: const Icon(Icons.add),
+    ),
+  );
+}
+
 }
