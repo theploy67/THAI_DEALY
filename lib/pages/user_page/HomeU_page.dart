@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:table_calendar/table_calendar.dart'; // ใช้แพ็กเกจนี้สำหรับ calendar
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
@@ -7,7 +7,6 @@ import 'package:thai_dealy/pages/user_page/NoteU_Detail_page.dart';
 
 class HomeUPage extends StatefulWidget {
   const HomeUPage({super.key});
-
   @override
   State<HomeUPage> createState() => _HomeUPageState();
 }
@@ -37,13 +36,19 @@ class _HomeUPageState extends State<HomeUPage> {
         print('Fetched Data: $data'); // ตรวจสอบข้อมูลที่ได้รับ
 
         setState(() {
-          doNowTasks = data.where((task) => task['status'] == 'Do Now!').toList();
-          workPlanTasks = data.where((task) => task['status'] == 'Normal').toList();
+          doNowTasks =
+              data.where((task) => task['status'] == 'Do Now!').toList();
+          workPlanTasks =
+              data.where((task) => task['status'] == 'Normal').toList();
 
           _eventsByDate.clear(); // เคลียร์ก่อนโหลดใหม่
           for (var task in data) {
             final DateTime date = DateTime.parse(task['dateline']);
-            final DateTime dateOnly = DateTime(date.year, date.month, date.day); // เอาเฉพาะวัน
+            final DateTime dateOnly = DateTime(
+              date.year,
+              date.month,
+              date.day,
+            ); // เอาเฉพาะวัน
 
             if (_eventsByDate[dateOnly] == null) {
               _eventsByDate[dateOnly] = [task];
@@ -61,10 +66,15 @@ class _HomeUPageState extends State<HomeUPage> {
   }
 
   // ฟังก์ชันแสดง Popup เมื่อเลือกวัน
-  void _showEventDialog(DateTime selectedDay) { 
-    final dateOnly = DateTime(selectedDay.year, selectedDay.month, selectedDay.day);
+  void _showEventDialog(DateTime selectedDay) {
+    final dateOnly = DateTime(
+      selectedDay.year,
+      selectedDay.month,
+      selectedDay.day,
+    );
     final events = _eventsByDate[dateOnly] ?? []; // ดึงเหตุการณ์จากวันที่เลือก
 
+    // เรียงงานตามวันที่ที่มีลำดับจากแรกสุด
     events.sort((a, b) {
       final dateA = DateTime.parse(a['dateline'] ?? '2000-01-01');
       final dateB = DateTime.parse(b['dateline'] ?? '2000-01-01');
@@ -79,69 +89,87 @@ class _HomeUPageState extends State<HomeUPage> {
             'Tasks on ${DateFormat('dd MMM yyyy').format(selectedDay)}', // แสดงหัวข้อเป็นวันที่
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 35),
           ),
-          content: events.isEmpty
-              ? const Text('No tasks found for this day')
-              : SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: events.map<Widget>((task) {
-                      final taskDate = DateTime.parse(task['dateline'] ?? '2000-01-01');
-                      final taskTitle = task['title'] ?? 'No Title';
-                      final taskSendFor = task['send_for'] ?? 'everyone';
-                      final taskDescription = task['description'] ?? 'No work';
-                      final taskStatus = task['status'] ?? 'Normal';
-                      final taskCategory = task['category'] ?? 'ติดตั้งเครื่อง';
+          content:
+              events.isEmpty
+                  ? const Text('No tasks found for this day')
+                  : SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children:
+                          events.map<Widget>((task) {
+                            final taskDate = DateTime.parse(
+                              task['dateline'] ?? '2000-01-01',
+                            );
+                            final taskTitle = task['title'] ?? 'No Title';
+                            final taskSendFor = task['send_for'] ?? 'everyone';
+                            final taskDescription =
+                                task['description'] ?? 'No work';
+                            final taskStatus = task['status'] ?? 'Normal';
+                            final taskCategory =
+                                task['category'] ?? 'ติดตั้งเครื่อง';
 
-                      // กำหนดสีหรือเงื่อนไขของงานในแต่ละงาน เช่น งานด่วน
-                      Color cardColor;
-                      if (taskDate.isBefore(DateTime.now().add(Duration(days: 1)))) {
-                        cardColor = Colors.red[100]!; // งานที่ต้องทำภายใน 1 วัน
-                      } else if (taskDate.isBefore(DateTime.now().add(Duration(days: 7)))) {
-                        cardColor = Colors.yellow[100]!; // งานภายใน 1 สัปดาห์
-                      } else {
-                        cardColor = Colors.green[100]!; // งานที่ไม่เร่งด่วน
-                      }
+                            // กำหนดสีหรือเงื่อนไขของงานในแต่ละงาน เช่น งานด่วน
+                            Color cardColor;
+                            if (taskDate.isBefore(
+                              DateTime.now().add(Duration(days: 1)),
+                            )) {
+                              cardColor =
+                                  Colors.red[100]!; // งานที่ต้องทำภายใน 1 วัน
+                            } else if (taskDate.isBefore(
+                              DateTime.now().add(Duration(days: 7)),
+                            )) {
+                              cardColor =
+                                  Colors.yellow[100]!; // งานภายใน 1 สัปดาห์
+                            } else {
+                              cardColor =
+                                  Colors.green[100]!; // งานที่ไม่เร่งด่วน
+                            }
 
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Card(
-                          color: cardColor,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Title: $taskTitle',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Dateline: ${DateFormat('dd MMM yyyy').format(taskDate)}',
-                                style: const TextStyle(fontSize: 18),
+                              child: Card(
+                                color: cardColor,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Title: $taskTitle',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Dateline: ${DateFormat('dd MMM yyyy').format(taskDate)}',
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    Text(
+                                      'Send For: $taskSendFor',
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    Text(
+                                      'Description: $taskDescription',
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    Text(
+                                      'Status: $taskStatus',
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                    Text(
+                                      'Category: $taskCategory',
+                                      style: const TextStyle(fontSize: 18),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              Text(
-                                'Send For: $taskSendFor',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              Text(
-                                'Description: $taskDescription',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              Text(
-                                'Status: $taskStatus',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              Text(
-                                'Category: $taskCategory',
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                            );
+                          }).toList(),
+                    ),
                   ),
-                ),
           actions: <Widget>[
             TextButton(
               child: const Text('Close'),
@@ -172,19 +200,186 @@ class _HomeUPageState extends State<HomeUPage> {
     }
   }
 
+  Future<void> updateChecklist(int id) async {
+    final url = Uri.parse('http://172.20.10.6:3000/notes/$id');
+
+    final Map<String, dynamic> data = {
+      'checklist': true, // หรือ 1 ถ้า API คาดหวังเป็นจำนวนเต็ม
+    };
+
+    try {
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+      if (response.statusCode == 200) {
+        print('Checklist updated successfully');
+      } else {
+        print('Failed to update checklist: ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFFFD966),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Text(
+              "THAI DAELY",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            Text("USER", style: TextStyle(fontSize: 16)),
+          ],
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TableCalendar(
+                firstDay: DateTime.utc(2020, 1, 1),
+                lastDay: DateTime.utc(2101, 12, 31),
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                eventLoader: (day) {
+                  final dateOnly = DateTime(day.year, day.month, day.day);
+                  return _eventsByDate[dateOnly] ?? [];
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  setState(() {
+                    _selectedDay = selectedDay;
+                    _focusedDay = focusedDay;
+                  });
+                  _showEventDialog(selectedDay);
+                },
+                calendarBuilders: CalendarBuilders(
+                  markerBuilder: (context, date, events) {
+                    if (events.isNotEmpty) {
+                      return Positioned(
+                        bottom: 1,
+                        child: _buildCircleMarker(events),
+                      );
+                    }
+                    return null;
+                  },
+                ),
+                headerStyle: const HeaderStyle(
+                  formatButtonVisible: false,
+                  titleCentered: true,
+                ),
+              ),
+
+              // แสดงงานที่ต้องทำตอนนี้ (Do Now)
+              const SizedBox(height: 16),
+              const Text(
+                "Do Now",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ..._buildTaskCards(Icons.add_box, doNowTasks),
+
+              // แสดงงานตามเวลา (Work Plan)
+              const SizedBox(height: 16),
+              const Text(
+                "Work Plan",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
+
+              // Location Section (Showing images)
+              const SizedBox(height: 16),
+              const Text(
+                "Name & Location",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  _buildLocationCard(
+                    "โรงพยาบาลสัตว์ PET CASTLE",
+                    "assets/images/loca1.png",
+                  ),
+                  const SizedBox(width: 8),
+                  _buildLocationCard(
+                    "Andaman International Clinic, Koh Yao Noi",
+                    "assets/images/loca2.png",
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ฟังก์ชันแสดง Popup สำหรับการกรอก Office Check ก่อนลบ
+  Future<void> showOfficeCheckDialog(
+    BuildContext context,
+    dynamic task,
+    List<dynamic> tasks,
+  ) async {
+    final TextEditingController officeCheckController = TextEditingController();
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Please Write Office Check'),
+          content: TextField(
+            controller: officeCheckController,
+            decoration: const InputDecoration(
+              hintText: 'Enter Office Check details',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop(); // ปิด Dialog
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () async {
+                // กด Save แล้วแค่ปิด Dialog
+                Navigator.of(context).pop(); // ปิด Dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
   List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
     return tasks.map((task) {
       return Dismissible(
-        key: Key(task['id'].toString()), // ใช้ id เป็น key
+        key: Key(
+          task['id'].toString(),
+        ), // ใช้ id เป็น key เพื่อการควบคุมสถานะได้ถูกต้อง
         onDismissed: (direction) async {
-          bool shouldDelete = await _showOfficeCheckDialog(task);  // แสดง popup และเช็คผล
-
-          if (shouldDelete) {
-            setState(() {
-              tasks.remove(task); // ลบงานจาก UI
-            });
-          }
+          // เมื่อปัดออกไปทางขวา ให้ทำการอัปเดตสถานะของงาน
+          await showOfficeCheckDialog(
+            context,
+            task,
+            tasks,
+          ); // แสดง Popup ให้กรอก Office Check
+          setState(() {
+            tasks.remove(task); // ลบงานจากรายการหลังจากปัด
+          });
         },
         background: Container(
           color: Colors.green,
@@ -238,10 +433,54 @@ class _HomeUPageState extends State<HomeUPage> {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    GestureDetector(
+                      onTap: () async {
+                        if (task['checklist'] != true) {
+                          await updateChecklist(
+                            task['id'],
+                          ); // ทำการอัปเดตในฐานข้อมูล
+                          setState(() {
+                            task['checklist'] =
+                                true; // อัปเดตค่าภายใน UI หลังจากกด confirm
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              task['checklist'] == true
+                                  ? const Color.fromARGB(255, 50, 94, 52)
+                                  : Colors
+                                      .grey[300], // เปลี่ยนเป็นสีเขียวเมื่อ confirm
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child:
+                            task['checklist'] == true
+                                ? const Text(
+                                  "Confirmed",
+                                  style: TextStyle(color: Colors.white),
+                                )
+                                : const Text(
+                                  "Confirm",
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: task['status'] == 'Do Now!' ? Colors.red : Colors.green,
+                        color:
+                            task['status'] == 'Do Now!'
+                                ? Colors.red
+                                : Colors.green,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -259,117 +498,46 @@ class _HomeUPageState extends State<HomeUPage> {
     }).toList();
   }
 
-  // ฟังก์ชันแสดง Dialog ให้กรอก "Office Check"
-  Future<bool> _showOfficeCheckDialog(dynamic task) async {
-    bool shouldDelete = false;
+  // ฟังก์ชันอัปเดตสถานะของงาน
+  Future<void> updateTaskStatus(int taskId) async {
+    final url = Uri.parse('http://172.20.10.6:3000/notes/$taskId');
 
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        TextEditingController officeCheckController = TextEditingController();
+    final Map<String, dynamic> data = {
+      'status': 'Completed', // อัปเดตสถานะเป็น "เสร็จแล้ว"
+    };
 
-        return AlertDialog(
-          title: const Text('Office Check'),
-          content: TextField(
-            controller: officeCheckController,
-            decoration: const InputDecoration(
-              hintText: 'กรุณากรอก Office Check',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Save'),
-              onPressed: () {
-                // เมื่อกด Save
-                // shouldDelete = true;
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
+    try {
+      final response = await http.put(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
 
-    return shouldDelete;
+      if (response.statusCode == 200) {
+        print('Task status updated to completed');
+      } else {
+        print('Failed to update task status: ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFFD966), 
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text(
-              "THAI DAELY",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+  Widget _buildLocationCard(String name, String imagePath) {
+    return Expanded(
+      child: Column(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              imagePath, // ใช้ Image.asset เพื่อแสดงภาพ
+              height: 100,
+              fit: BoxFit.cover,
             ),
-            Text("USER", style: TextStyle(fontSize: 16)),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2101, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: (day) {
-                  final dateOnly = DateTime(day.year, day.month, day.day);
-                  return _eventsByDate[dateOnly] ?? [];
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  _showEventDialog(selectedDay);
-                },
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, date, events) {
-                    if (events.isNotEmpty) {
-                      return Positioned(
-                        bottom: 1,
-                        child: _buildCircleMarker(events),
-                      );
-                    }
-                    return null;
-                  },
-                ),
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Do Now",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.add_box, doNowTasks),
-              const SizedBox(height: 16),
-              const Text(
-                "Work Plan",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
-            ],
           ),
-        ),
+          const SizedBox(height: 4),
+          Text(name, textAlign: TextAlign.center),
+        ],
       ),
     );
   }

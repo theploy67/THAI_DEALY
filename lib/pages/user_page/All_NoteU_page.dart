@@ -92,6 +92,7 @@ Widget build(BuildContext context) {
     appBar: AppBar(
       backgroundColor: const Color(0xFFFFD966),
       title: const Text('All Notes'),
+      leading: null,  // ลบลูกศรออก
     ),
     body: SafeArea(
       child: SingleChildScrollView(

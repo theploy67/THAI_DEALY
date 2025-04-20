@@ -33,14 +33,14 @@ class AboutUsPage extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  right: 16,
-                  top: 6,
-                  child: IconButton(
-                    icon: const Icon(Icons.search, color: Colors.black),
-                    onPressed: () {},
-                  ),
-                ),
+                // Positioned(
+                //   right: 16,
+                //   top: 6,
+                //   child: IconButton(
+                //     icon: const Icon(Icons.search, color: Colors.black),
+                //     onPressed: () {},
+                //   ),
+                // ),
               ],
             ),
           ),

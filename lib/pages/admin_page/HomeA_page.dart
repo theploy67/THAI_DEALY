@@ -208,179 +208,183 @@ class _HomeAPageState extends State<HomeAPage> {
     }
   }
 
-  // ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
-  List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
-    return tasks.map((task) {
-      return Dismissible(
-        key: Key(task['id'].toString()), // ใช้ id เป็น key
-        onDismissed: (direction) {
-          setState(() {
-            dismissedTasks.add(task); // เพิ่มงานที่ถูกปัดออกใน dismissedTasks
-            doNowTasks.remove(task); // ลบงานจากรายการในหน้า Home
-          });
-        },
-        background: Container(
-          color: Colors.green,
-          alignment: Alignment.centerRight,
-          child: const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'งานเสร็จแล้ว',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
+// ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
+List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
+  return tasks.map((task) {
+    return Dismissible(
+      key: Key(task['id'].toString()), // ใช้ id เป็น key
+      onDismissed: (direction) {
+        setState(() {
+          if (tasks == workPlanTasks) {
+            workPlanTasks.remove(task); // ลบงานจาก workPlanTasks
+          } else {
+            doNowTasks.remove(task); // ลบงานจาก doNowTasks
+          }
+        });
+      },
+      background: Container(
+        color: Colors.green,
+        alignment: Alignment.centerRight,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'งานเสร็จแล้ว',
+            style: TextStyle(color: Colors.white, fontSize: 18),
           ),
         ),
-        child: Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NoteADetailPage(note: task),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    children: [
-                      Icon(icon, size: 40),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            task['title'],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Last Modified: ${DateFormat('dd MMM yyyy').format(DateTime.parse(task['last_modified']))}",
-                          ),
-                          Text("Sent For: ${task['sent_for']}"),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+      ),
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => NoteADetailPage(note: task),
+                    ),
+                  );
+                },
+                child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: task['status'] == 'Do Now!' ? Colors.red : Colors.green,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        task['status'],
-                        style: const TextStyle(color: Colors.white),
-                      ),
+                    Icon(icon, size: 40),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task['title'],
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Last Modified: ${DateFormat('dd MMM yyyy').format(DateTime.parse(task['last_modified']))}",
+                        ),
+                        Text("Sent For: ${task['sent_for']}"),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }).toList();
-  }
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFDE712C),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text(
-              "THAI DAELY",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            Text("Admin", style: TextStyle(fontSize: 16)),
-          ],
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TableCalendar(
-                firstDay: DateTime.utc(2020, 1, 1),
-                lastDay: DateTime.utc(2101, 12, 31),
-                focusedDay: _focusedDay,
-                selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                eventLoader: (day) {
-                  final dateOnly = DateTime(day.year, day.month, day.day);
-                  return _eventsByDate[dateOnly] ?? [];
-                },
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                  _showEventDialog(selectedDay);
-                },
-                calendarBuilders: CalendarBuilders(
-                  markerBuilder: (context, date, events) {
-                    if (events.isNotEmpty) {
-                      return Positioned(
-                        bottom: 1,
-                        child: _buildCircleMarker(events),
-                      );
-                    }
-                    return null;
-                  },
-                ),
-                headerStyle: const HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                "Do Now",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const Spacer(),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: task['status'] == 'Do Now!' ? Colors.red : Colors.green,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      task['status'],
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.add_box, doNowTasks),
-              const SizedBox(height: 16),
-              const Text(
-                "Work Plan",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
             ],
           ),
         ),
       ),
     );
+  }).toList();
+}
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: const Color(0xFFDE712C),
+      title: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: const [
+          Text(
+            "THAI DAELY",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          Text("Admin", style: TextStyle(fontSize: 16)),
+        ],
+      ),
+    ),
+    body: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TableCalendar(
+              firstDay: DateTime.utc(2020, 1, 1),
+              lastDay: DateTime.utc(2101, 12, 31),
+              focusedDay: _focusedDay,
+              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+              eventLoader: (day) {
+                final dateOnly = DateTime(day.year, day.month, day.day);
+                return _eventsByDate[dateOnly] ?? [];
+              },
+              onDaySelected: (selectedDay, focusedDay) {
+                setState(() {
+                  _selectedDay = selectedDay;
+                  _focusedDay = focusedDay;
+                });
+                _showEventDialog(selectedDay);
+              },
+              calendarBuilders: CalendarBuilders(
+                markerBuilder: (context, date, events) {
+                  if (events.isNotEmpty) {
+                    return Positioned(
+                      bottom: 1,
+                      child: _buildCircleMarker(events),
+                    );
+                  }
+                  return null;
+                },
+              ),
+              headerStyle: const HeaderStyle(
+                formatButtonVisible: false,
+                titleCentered: true,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Do Now",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ..._buildTaskCards(Icons.add_box, doNowTasks),
+            const SizedBox(height: 16),
+            const Text(
+              "Work Plan",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+Widget _buildCircleMarker(List<dynamic> events) {
+  Color markerColor = Colors.blue;
+
+  if (events.any((e) => e['status'] == 'Do Now!')) {
+    markerColor = Colors.red;
+  } else if (events.any((e) => e['status'] == 'Normal')) {
+    markerColor = Colors.green;
   }
 
-  Widget _buildCircleMarker(List<dynamic> events) {
-    Color markerColor = Colors.blue;
+  return Container(
+    width: 8.0,
+    height: 8.0,
+    decoration: BoxDecoration(shape: BoxShape.circle, color: markerColor),
+  );
+}
 
-    if (events.any((e) => e['status'] == 'Do Now!')) {
-      markerColor = Colors.red;
-    } else if (events.any((e) => e['status'] == 'Normal')) {
-      markerColor = Colors.green;
-    }
-
-    return Container(
-      width: 8.0,
-      height: 8.0,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: markerColor),
-    );
-  }
   
 }
