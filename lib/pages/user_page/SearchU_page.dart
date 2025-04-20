@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart'; 
+import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -44,18 +44,10 @@ class _SearchUPageState extends State<SearchUPage> {
     },
   ];
 
-  final List<Map<String, String>> tagsPlaces = [
-    {
-      'name': 'คลินิกสัตวแพทย์ A',
-      'address': 'ถนนสุขสวัสดิ์',
-      'image': 'loca1.png',
-    },
-    {
-      'name': 'คลินิกสัตวแพทย์ B',
-      'address': 'กรุงเทพฯ',
-      'image': 'loca1.png',
-    },
-  ];
+  List<Map<String, String>> tagsPlaces = [];  // เก็บสถานที่ที่เป็นโปรด
+
+  // ใช้ Map ในการเก็บสถานะของหัวใจ
+  Map<String, bool> favorites = {};
 
   @override
   Widget build(BuildContext context) {
@@ -150,9 +142,9 @@ class _SearchUPageState extends State<SearchUPage> {
                     Expanded(
                       child: TabBarView(
                         children: [
-                          _buildPlaceList(topPlaces),
-                          _buildPlaceList(accountsPlaces),
-                          _buildPlaceList(tagsPlaces),
+                          _buildPlaceList(topPlaces),  // แสดงสถานที่ใน Top
+                          _buildPlaceList([...topPlaces, ...accountsPlaces]),  // แสดงสถานที่ทั้งหมด (Top + Accounts)
+                          _buildPlaceList(tagsPlaces),  // แสดงสถานที่ที่เป็นโปรด (Tags)
                         ],
                       ),
                     ),
@@ -175,6 +167,8 @@ class _SearchUPageState extends State<SearchUPage> {
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final place = filtered[index];
+        bool isFavorite = favorites[place['name']] ?? false; // ใช้ค่า favorites สำหรับสถานที่นั้นๆ
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -196,11 +190,35 @@ class _SearchUPageState extends State<SearchUPage> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(place['address']!),
-                trailing: IconButton(
-                  icon: const Icon(Icons.location_on_outlined),
-                  onPressed: () {
-                    _openMap(place['address']!);
-                  },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.location_on_outlined),
+                      onPressed: () {
+                        _openMap(place['address']!);
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (place['name'] != null) {
+                            favorites[place['name']!] =
+                                !isFavorite; // เปลี่ยนสถานะของ favorite
+                            if (isFavorite) {
+                              tagsPlaces.remove(place);  // ลบจาก Tags ถ้าไม่ใช่โปรด
+                            } else {
+                              tagsPlaces.add(place);  // เพิ่มไปที่ Tags ถ้ากดเป็นโปรด
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
               ClipRRect(

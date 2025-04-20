@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,10 +18,12 @@ class _HomeAPageState extends State<HomeAPage> {
   List<dynamic> doNowTasks = []; // งานที่ต้องทำในปัจจุบัน (Do Now)
   List<dynamic> workPlanTasks = []; // งานตามเวลา (Work Plan)
   Map<DateTime, List<dynamic>> _eventsByDate = {};
+  List<dynamic> dismissedTasks = []; // เก็บงานที่ถูกปัดออก (แค่หายไปในหน้า Home)
 
   @override
   void initState() {
     super.initState();
+    dismissedTasks.clear(); // เคลียร์ dismissedTasks เมื่อหน้า Home ถูกโหลดใหม่
     fetchTasks(); // ดึงข้อมูลงานเมื่อเริ่มต้น
   }
 
@@ -36,22 +38,16 @@ class _HomeAPageState extends State<HomeAPage> {
         final data = json.decode(response.body);
         print('Fetched Data: $data'); // ตรวจสอบข้อมูลที่ได้รับ
 
-        // setState(() {
-        //   // กรองข้อมูลตาม status
-        //   doNowTasks =
-        //       data
-        //           .where((task) => task['status'] == 'Do Now!')
-        //           .toList(); // ใช้ 'Do Now!' แทน 'Do Now'
-        //   workPlanTasks =
-        //       data
-        //           .where((task) => task['status'] == 'Normal')
-        //           .toList(); // ใช้ 'Normal'
-        // });
         setState(() {
-          doNowTasks =
-              data.where((task) => task['status'] == 'Do Now!').toList();
-          workPlanTasks =
-              data.where((task) => task['status'] == 'Normal').toList();
+          // กรองงานที่ถูกปัดออกจาก UI
+          doNowTasks = data
+              .where((task) =>
+                  task['status'] == 'Do Now!' && !dismissedTasks.contains(task))
+              .toList();
+          workPlanTasks = data
+              .where((task) =>
+                  task['status'] == 'Normal' && !dismissedTasks.contains(task))
+              .toList();
 
           _eventsByDate.clear(); // เคลียร์ก่อนโหลดใหม่
           for (var task in data) {
@@ -182,7 +178,7 @@ class _HomeAPageState extends State<HomeAPage> {
                           }).toList(),
                     ),
                   ),
-          actions: <Widget>[
+          actions: <Widget>[ 
             TextButton(
               child: const Text('Close'),
               onPressed: () {
@@ -194,28 +190,6 @@ class _HomeAPageState extends State<HomeAPage> {
       },
     );
   }
-
-  // void _showEventDialog(DateTime selectedDay) {
-  //   String event = 'No events for this day'; // ตรวจสอบวันที่มีเหตุการณ์หรือไม่
-
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text('Event on ${selectedDay.toLocal()}'),
-  //         content: Text(event),
-  //         actions: <Widget>[
-  //           TextButton(
-  //             child: const Text('Close'),
-  //             onPressed: () {
-  //               Navigator.of(context).pop();
-  //             },
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   // ฟังก์ชันเลือกวันที่จากปฏิทิน
   Future<void> _selectDate(BuildContext context) async {
@@ -234,6 +208,90 @@ class _HomeAPageState extends State<HomeAPage> {
     }
   }
 
+  // ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
+  List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
+    return tasks.map((task) {
+      return Dismissible(
+        key: Key(task['id'].toString()), // ใช้ id เป็น key
+        onDismissed: (direction) {
+          setState(() {
+            dismissedTasks.add(task); // เพิ่มงานที่ถูกปัดออกใน dismissedTasks
+            doNowTasks.remove(task); // ลบงานจากรายการในหน้า Home
+          });
+        },
+        background: Container(
+          color: Colors.green,
+          alignment: Alignment.centerRight,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'งานเสร็จแล้ว',
+              style: TextStyle(color: Colors.white, fontSize: 18),
+            ),
+          ),
+        ),
+        child: Card(
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NoteADetailPage(note: task),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(icon, size: 40),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            task['title'],
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Last Modified: ${DateFormat('dd MMM yyyy').format(DateTime.parse(task['last_modified']))}",
+                          ),
+                          Text("Sent For: ${task['sent_for']}"),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: task['status'] == 'Do Now!' ? Colors.red : Colors.green,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        task['status'],
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }).toList();
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -256,24 +314,6 @@ class _HomeAPageState extends State<HomeAPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ปฏิทินส่วนนี้
-              // TableCalendar(
-              //   firstDay: DateTime.utc(2020, 1, 1),
-              //   lastDay: DateTime.utc(2101, 12, 31),
-              //   focusedDay: _focusedDay,
-              //   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              //   onDaySelected: (selectedDay, focusedDay) {
-              //     setState(() {
-              //       _selectedDay = selectedDay;
-              //       _focusedDay = focusedDay; // update focused day as well
-              //     });
-              //     _showEventDialog(selectedDay); // แสดง popup เมื่อเลือกวัน
-              //   },
-              //   headerStyle: const HeaderStyle(
-              //     formatButtonVisible: false,
-              //     titleCentered: true,
-              //   ),
-              // ),
               TableCalendar(
                 firstDay: DateTime.utc(2020, 1, 1),
                 lastDay: DateTime.utc(2101, 12, 31),
@@ -306,8 +346,6 @@ class _HomeAPageState extends State<HomeAPage> {
                   titleCentered: true,
                 ),
               ),
-
-              // แสดงงานที่ต้องทำตอนนี้ (Do Now)
               const SizedBox(height: 16),
               const Text(
                 "Do Now",
@@ -315,8 +353,6 @@ class _HomeAPageState extends State<HomeAPage> {
               ),
               const SizedBox(height: 8),
               ..._buildTaskCards(Icons.add_box, doNowTasks),
-
-              // แสดงงานตามเวลา (Work Plan)
               const SizedBox(height: 16),
               const Text(
                 "Work Plan",
@@ -324,115 +360,9 @@ class _HomeAPageState extends State<HomeAPage> {
               ),
               const SizedBox(height: 8),
               ..._buildTaskCards(Icons.check_box_outlined, workPlanTasks),
-
-              // Location Section (Showing images)
-              const SizedBox(height: 16),
-              const Text(
-                "Name & Location",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _buildLocationCard(
-                    "โรงพยาบาลสัตว์ PET CASTLE",
-                    "assets/images/loca1.png",
-                  ),
-                  const SizedBox(width: 8),
-                  _buildLocationCard(
-                    "Andaman International Clinic, Koh Yao Noi",
-                    "assets/images/loca2.png",
-                  ),
-                ],
-              ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // ฟังก์ชันที่กรอง task ตาม status ที่ให้เลือก (Do Now, Normal)
-  List<Widget> _buildTaskCards(IconData icon, List<dynamic> tasks) {
-    return tasks.map((task) {
-      return GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) =>
-                      NoteADetailPage(note: task), // หรือ note ถ้าใช้ชื่อนั้น
-            ),
-          );
-        },
-        child: Card(
-          margin: const EdgeInsets.symmetric(vertical: 6),
-          child: ListTile(
-            leading: Icon(icon, size: 40),
-            title: Text(task['title']), // แสดง title จากข้อมูล
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Last Modified: ${DateFormat('dd MMM yyyy').format(DateTime.parse(task['last_modified']))}",
-                ), // แสดง last_modified
-                Text("Sent For: ${task['sent_for']}"), // แสดง sent_for
-              ],
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black12,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Text("Confirmed"),
-                ),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        task['status'] == 'Do Now!' ? Colors.red : Colors.green,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    task['status'],
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    }).toList();
-  }
-
-  Widget _buildLocationCard(String name, String imagePath) {
-    return Expanded(
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              imagePath, // ใช้ Image.asset เพื่อแสดงภาพ
-              height: 100,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(name, textAlign: TextAlign.center),
-        ],
       ),
     );
   }
@@ -452,4 +382,5 @@ class _HomeAPageState extends State<HomeAPage> {
       decoration: BoxDecoration(shape: BoxShape.circle, color: markerColor),
     );
   }
+  
 }

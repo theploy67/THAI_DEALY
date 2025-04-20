@@ -47,18 +47,10 @@ class _SearchAPageState extends State<SearchAPage> {
     },
   ];
 
-  final List<Map<String, String>> tagsPlaces = [
-    {
-      'name': '#คลินิกสัตวแพทย์ A',
-      'address': 'ถนนสุขสวัสดิ์',
-      'image': 'loca1.png',
-    },
-    {
-      'name': '#คลินิกสัตวแพทย์ B',
-      'address': 'กรุงเทพฯ',
-      'image': 'loca1.png',
-    },
-  ];
+  List<Map<String, String>> tagsPlaces = [];  // เก็บสถานที่ที่เป็นโปรด
+
+  // ใช้ Map ในการเก็บสถานะของหัวใจ
+  Map<String, bool> favorites = {};
 
   @override
   Widget build(BuildContext context) {
@@ -154,9 +146,9 @@ class _SearchAPageState extends State<SearchAPage> {
                     Expanded(
                       child: TabBarView(
                         children: [
-                          _buildPlaceList(topPlaces),
-                          _buildPlaceList(accountsPlaces),
-                          _buildPlaceList(tagsPlaces),
+                          _buildPlaceList(topPlaces, 'Top'),
+                          _buildPlaceList([...topPlaces, ...accountsPlaces], 'Accounts'), // รวมทั้ง 'topPlaces' และ 'accountsPlaces'
+                          _buildPlaceList(tagsPlaces, 'Tags'),  // แสดงแท็บ Tags
                         ],
                       ),
                     ),
@@ -170,7 +162,7 @@ class _SearchAPageState extends State<SearchAPage> {
     );
   }
 
-  Widget _buildPlaceList(List<Map<String, String>> places) {
+  Widget _buildPlaceList(List<Map<String, String>> places, String tab) {
     final filtered = places
         .where((p) => p['name']!
             .toLowerCase()
@@ -181,6 +173,8 @@ class _SearchAPageState extends State<SearchAPage> {
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final place = filtered[index];
+        bool isFavorite = favorites[place['name']] ?? false; // ใช้ค่า favorites สำหรับสถานที่นั้นๆ
+
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
@@ -202,11 +196,35 @@ class _SearchAPageState extends State<SearchAPage> {
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(place['address']!),
-                trailing: IconButton(
-                  icon: const Icon(Icons.location_on_outlined),
-                  onPressed: () {
-                    _openMap(place['address']!);
-                  },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.location_on_outlined),
+                      onPressed: () {
+                        _openMap(place['address']!);
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: isFavorite ? Colors.red : Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (place['name'] != null) {
+                            favorites[place['name']!] =
+                                !isFavorite; // เปลี่ยนสถานะของ favorite
+                            if (isFavorite) {
+                              tagsPlaces.remove(place);  // ลบจาก Tags ถ้าไม่ใช่โปรด
+                            } else {
+                              tagsPlaces.add(place);  // เพิ่มไปที่ Tags ถ้ากดเป็นโปรด
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  ],
                 ),
               ),
               ClipRRect(

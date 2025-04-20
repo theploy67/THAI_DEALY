@@ -189,18 +189,18 @@ Widget build(BuildContext context) {
         ),
       ),
     ),
-    floatingActionButton: FloatingActionButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => NoteAddPage(dateline: DateTime.now()),
-          ),
-        );
-      },
-      backgroundColor: const Color(0xFFDE712C),
-      child: const Icon(Icons.add),
-    ),
+    // floatingActionButton: FloatingActionButton(
+    //   onPressed: () {
+    //     Navigator.push(
+    //       context,
+    //       MaterialPageRoute(
+    //         builder: (context) => NoteAddPage(dateline: DateTime.now()),
+    //       ),
+    //     );
+    //   },
+    //   backgroundColor: const Color(0xFFDE712C),
+    //   child: const Icon(Icons.add),
+    // ),
   );
 }
 

@@ -20,12 +20,15 @@ class _NoteUDetailPageState extends State<NoteUDetailPage> {
   late TextEditingController _addressController;
   late TextEditingController _telController;
   late TextEditingController _descriptionController;
+  late TextEditingController _officeCheckController; // เพิ่ม TextEditingController สำหรับ Office Check
 
   late DateTime _datelineDate;
 
-  String _status = 'Normal';  // ค่าดั้งเดิมสำหรับสถานะ
-  String _company = 'บริษัทA';  // ค่าดั้งเดิมสำหรับบริษัท
-  String _category = 'งานติดตั้ง';  // ค่าดั้งเดิมสำหรับหมวดหมู่
+  String _status = 'Normal';  
+  String _company = 'บริษัทA';  
+  String _category = 'งานติดตั้ง';  
+
+  bool _isEditable = false;  // ตัวแปรสำหรับตรวจสอบว่าแก้ไขได้หรือไม่
 
   @override
   void initState() {
@@ -38,10 +41,10 @@ class _NoteUDetailPageState extends State<NoteUDetailPage> {
     _addressController = TextEditingController(text: widget.note['address'] ?? '');
     _telController = TextEditingController(text: widget.note['tel'] ?? '');
     _descriptionController = TextEditingController(text: widget.note['description'] ?? '');
+    _officeCheckController = TextEditingController(text: widget.note['office_check'] ?? ''); // เริ่มต้นค่าของ Office Check
 
     _datelineDate = DateTime.tryParse(widget.note['dateline'] ?? '') ?? DateTime.now();
 
-    // กำหนดค่าเริ่มต้นสำหรับสถานะ, บริษัท, และหมวดหมู่จากข้อมูลที่ได้รับ
     _status = widget.note['status'] ?? 'Normal';
     _company = widget.note['company'] ?? 'บริษัทA';
     _category = widget.note['category'] ?? 'งานติดตั้ง';
@@ -64,27 +67,122 @@ class _NoteUDetailPageState extends State<NoteUDetailPage> {
             children: [
               _buildTextField("Title", _titleController, readOnly: true),
               _buildTextField("Created By", _createdByController, readOnly: true),
-              _buildTextField("Last Modified", TextEditingController(text: DateFormat('yyyy-MM-dd').format(DateTime.now())), readOnly: true), // ปิดการแก้ไข
-              _buildDateRow("Dateline", _datelineDate, () {}), // ไม่ให้เลือกวันที่ได้
+              _buildTextField("Last Modified", TextEditingController(text: DateFormat('yyyy-MM-dd').format(DateTime.now())), readOnly: true),
+              _buildDateRow("Dateline", _datelineDate, () {}),
               _buildTextField("Sent For", _sentForController, readOnly: true),
               _buildTextField("Contact", _contactController, readOnly: true),
               _buildTextField("Link Map", _linkMapController, readOnly: true),
               _buildTextField("Address", _addressController, readOnly: true),
               _buildTextField("Tel", _telController, readOnly: true),
-              _buildTextField("Description / Remark", _descriptionController, maxLines: 4, readOnly: true),
+              _buildDescriptionField(),  // ช่องหมายเหตุที่สามารถแก้ไขได้
 
               const SizedBox(height: 24),
 
-              // สถานะ (ไม่สามารถแก้ไขได้)
               _buildTextField("Status", TextEditingController(text: _status), readOnly: true),
               _buildTextField("Company", TextEditingController(text: _company), readOnly: true),
               _buildTextField("Category", TextEditingController(text: _category), readOnly: true),
 
+              // ช่องใหม่: Office Check
+              _buildOfficeCheckField(),  // เพิ่มช่องนี้
+
+              // ปุ่ม Save และ Cancel
+              if (_isEditable) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: _saveNote,
+                      child: const Text("Save"),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: _cancelEdit,
+                      child: const Text("Cancel"),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
       ),
     );
+  }
+
+  // ช่องหมายเหตุที่สามารถแก้ไขได้
+  Widget _buildDescriptionField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _descriptionController,
+              maxLines: 4,
+              readOnly: true,  // ช่อง Description ไม่สามารถแก้ไขได้
+              decoration: InputDecoration(
+                labelText: "Description / Remark",
+                border: const OutlineInputBorder(),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ช่องใหม่: Office Check ที่สามารถแก้ไขได้
+  Widget _buildOfficeCheckField() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _officeCheckController,
+              maxLines: 1,
+              readOnly: !_isEditable,  // เมื่อไม่ใช่โหมดแก้ไขจะไม่สามารถแก้ไขได้
+              decoration: InputDecoration(
+                labelText: "Office Check",
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: _toggleEdit,  // เปิดโหมดแก้ไขเมื่อกด
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ฟังก์ชันสำหรับเปลี่ยนสถานะการแก้ไข
+  void _toggleEdit() {
+    setState(() {
+      _isEditable = !_isEditable;
+    });
+  }
+
+  // ฟังก์ชันสำหรับบันทึกโน้ต
+  void _saveNote() {
+    setState(() {
+      widget.note['office_check'] = _officeCheckController.text;
+      _isEditable = false;  // ปิดโหมดแก้ไขหลังจากบันทึก
+    });
+
+    // คุณอาจจะทำการบันทึกข้อมูลไปยังฐานข้อมูลหรือ API ที่นี่
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: const Text('Note saved successfully!')),
+    );
+  }
+
+  // ฟังก์ชันยกเลิกการแก้ไข
+  void _cancelEdit() {
+    setState(() {
+      _isEditable = false;  // ยกเลิกการแก้ไขและกลับไปที่ข้อมูลเดิม
+      _officeCheckController.text = widget.note['office_check'] ?? '';
+    });
   }
 
   Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, bool readOnly = false}) {
@@ -93,7 +191,7 @@ class _NoteUDetailPageState extends State<NoteUDetailPage> {
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        readOnly: readOnly,  // ปิดการแก้ไข
+        readOnly: readOnly,  
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -115,3 +213,4 @@ class _NoteUDetailPageState extends State<NoteUDetailPage> {
     );
   }
 }
+
