@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; 
 import 'package:gap/gap.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -10,25 +10,23 @@ class SearchUPage extends StatefulWidget {
 }
 
 class _SearchUPageState extends State<SearchUPage> {
-  String searchQuery = '';
+  String searchQuery = ''; // ตัวแปรเก็บข้อความที่ค้นหา
+  final TextEditingController _searchController = TextEditingController(); // ตัวควบคุมการค้นหาผ่าน TextField
 
   final List<Map<String, String>> topPlaces = [
     {
       'name': 'Andaman International Clinic',
-      'address':
-          'Andaman International Clinic Klong Nin 33-33/1 ตำบล เกาะลันตาใหญ่ อำเภอเกาะลันตา กระบี่ 81150',
+      'address': 'Andaman International Clinic Klong Nin 33-33/1 ตำบล เกาะลันตาใหญ่ อำเภอเกาะลันตา กระบี่ 81150',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกแพทย์ศุภฤกษ์',
-      'address':
-          'แพทย์ศุภฤกษ์ คลินิกกระดูกและข้อ จันทบุรี 226 97 ตำบล ท่าช้าง อ.เมือง จันทบุรี 22000',
+      'address': 'แพทย์ศุภฤกษ์ คลินิกกระดูกและข้อ จันทบุรี 226 97 ตำบล ท่าช้าง อ.เมือง จันทบุรี 22000',
       'image': 'loca1.png',
     },
     {
       'name': 'คลินิกสามพัฒนาชุมชน 2 (หมอศศินา)',
-      'address':
-          '179/45 ถนน เศรษฐกิจ 1, ตำบล ตลาดกระทุ่มแบน, อำเภอกระทุ่มแบน 74110 สมุทรสาคร',
+      'address': '179/45 ถนน เศรษฐกิจ 1, ตำบล ตลาดกระทุ่มแบน, อำเภอกระทุ่มแบน 74110 สมุทรสาคร',
       'image': 'loca1.png',
     },
   ];
@@ -67,7 +65,7 @@ class _SearchUPageState extends State<SearchUPage> {
         backgroundColor: const Color(0xFFFFD966),
         title: const Text("Explore", style: TextStyle(color: Colors.black)),
         centerTitle: true,
-        automaticallyImplyLeading: false, //ปิดปุ่มลูกศรย้อนกลับ
+        automaticallyImplyLeading: false, // ปิดปุ่มลูกศรย้อนกลับ
       ),
       body: SafeArea(
         child: Column(
@@ -91,6 +89,7 @@ class _SearchUPageState extends State<SearchUPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
+                              controller: _searchController, // ใช้ TextEditingController
                               onChanged: (value) {
                                 setState(() {
                                   searchQuery = value;
@@ -116,7 +115,8 @@ class _SearchUPageState extends State<SearchUPage> {
                   GestureDetector(
                     onTap: () {
                       setState(() {
-                        searchQuery = '';
+                        searchQuery = '';  // เคลียร์ข้อความค้นหาผ่านตัวแปร
+                        _searchController.clear();  // เคลียร์ข้อความใน TextField
                       });
                     },
                     child: const Text(
@@ -168,9 +168,7 @@ class _SearchUPageState extends State<SearchUPage> {
 
   Widget _buildPlaceList(List<Map<String, String>> places) {
     final filtered = places
-        .where((p) => p['name']!
-            .toLowerCase()
-            .contains(searchQuery.toLowerCase()))
+        .where((p) => p['name']!.toLowerCase().contains(searchQuery.toLowerCase()))
         .toList();
 
     return ListView.builder(

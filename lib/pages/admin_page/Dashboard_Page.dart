@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -9,12 +12,74 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int selectedTabIndex = 0; // 0: Waiting, 1: Remind, 2: Done
+  double checklistProgress = 0.0;
+  List<dynamic> tasks = []; // รายการงานที่ดึงจาก API
+  Map<String, dynamic> weatherData = {}; // ตัวแปรเก็บข้อมูลอากาศ
 
-  final List<Map<String, dynamic>> tasks = [
-    {'title': 'Discuss budget', 'date': '23 Jan 2025'},
-    {'title': 'Ploy proposed moving to the.....', 'date': '23 Jan 2025'},
-    {'title': 'Meeting with Ploy next week', 'date': '23 Jan 2025'},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    fetchTasks(); // ดึงข้อมูลเมื่อเริ่มต้น
+    fetchWeather(); // ดึงข้อมูลพยากรณ์อากาศ
+  }
+
+  // ฟังก์ชันดึงข้อมูลงานจาก API
+  Future<void> fetchTasks() async {
+    try {
+      final response = await http.get(
+        Uri.parse('http://172.20.10.6:3000/notes'), 
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          tasks = data;
+
+          // คำนวณเปอร์เซ็นต์การทำงาน
+          final totalTasks = tasks.length;
+          final completedTasks = tasks.where((task) => task['checklist'] == true).length;
+          checklistProgress = totalTasks == 0 ? 0.0 : completedTasks / totalTasks;
+        });
+      } else {
+        throw Exception('Failed to load tasks');
+      }
+    } catch (e) {
+      print('Error: $e');
+    }
+  }
+
+  // ฟังก์ชันดึงข้อมูลพยากรณ์อากาศจาก WAQI API
+Future<void> fetchWeather() async {
+  try {
+    const String token = '60a27dbd75ae5dcb682f949461d3808e70678e3e'; // ใส่ token ของคุณ
+    final city = 'bangkok'; // เมืองที่ต้องการดึงข้อมูล (เช่น กรุงเทพฯ)
+
+    // เพิ่ม timeout ในการร้องขอ API
+    final response = await http.get(
+      Uri.parse('https://api.waqi.info/feed/$city/?token=$token'),
+    ).timeout(const Duration(seconds: 30));  // กำหนดเวลา timeout ให้เป็น 10 วินาที
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      setState(() {
+        weatherData = data['data']; // เก็บข้อมูลอากาศในตัวแปร
+      });
+      print('Weather data loaded successfully');
+    } else {
+      print('Error: ${response.statusCode}');
+      print('Error Response: ${response.body}');
+      throw Exception('Failed to load weather data');
+    }
+  } catch (e) {
+    // การจัดการข้อผิดพลาด
+    if (e is TimeoutException) {
+      print('Request Timeout! Please check your internet connection.');
+    } else {
+      print('Error: $e');
+    }
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,18 +125,24 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 const Text("Work"),
                 const SizedBox(height: 10),
-                const Text(
-                  "80%",
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                Text(
+                  "${(checklistProgress * 100).toStringAsFixed(0)}%", // แสดงเปอร์เซ็นต์
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 LinearProgressIndicator(
-                  value: 0.8,
+                  value: checklistProgress,
                   backgroundColor: Colors.white,
                 ),
               ],
             ),
           ),
+
+          // Weather Card (แสดงข้อมูลอากาศ)
+          buildWeatherCard(),
 
           // Tab Selector
           Row(
@@ -92,6 +163,54 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // Widget สำหรับแสดงข้อมูลสภาพอากาศ
+  Widget buildWeatherCard() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Weather Information",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          weatherData.isNotEmpty && weatherData.containsKey('aqi')
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // แสดง AQI
+                    Text(
+                      'Air Quality Index (AQI): ${weatherData['aqi']}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    // แสดงสถานะของอากาศ
+                    Text(
+                      'Dominant Pollution: ${weatherData['dominentpol'] ?? 'N/A'}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    // PM2.5 Forecast สำหรับ 3 วันถัดไป
+                    if (weatherData['forecast'] != null && weatherData['forecast']['daily'] != null)
+                      ...[
+                        const Text("PM2.5 Forecast for Next 3 Days:", style: TextStyle(fontWeight: FontWeight.bold)),
+                        Text("2025-03-23: avg=${weatherData['forecast']['daily']['pm25'][0]['avg']}, min=${weatherData['forecast']['daily']['pm25'][0]['min']}, max=${weatherData['forecast']['daily']['pm25'][0]['max']}"),
+                        Text("2025-03-24: avg=${weatherData['forecast']['daily']['pm25'][1]['avg']}, min=${weatherData['forecast']['daily']['pm25'][1]['min']}, max=${weatherData['forecast']['daily']['pm25'][1]['max']}"),
+                        Text("2025-03-25: avg=${weatherData['forecast']['daily']['pm25'][2]['avg']}, min=${weatherData['forecast']['daily']['pm25'][2]['min']}, max=${weatherData['forecast']['daily']['pm25'][2]['max']}"),
+                      ],
+                  ],
+                )
+              : const CircularProgressIndicator(),
+        ],
+      ),
+    );
+  }
+
+  // ฟังก์ชันแสดงแท็บ
   Widget _buildTabIcon(IconData icon, String label, int index) {
     final isSelected = selectedTabIndex == index;
     return GestureDetector(
@@ -117,12 +236,22 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
+  // ฟังก์ชันแสดงงานตามสถานะที่เลือก
   Widget _buildTaskList() {
+    List<dynamic> filteredTasks = [];
+    if (selectedTabIndex == 0) {
+      filteredTasks = tasks.where((task) => task['status'] == 'Do Now!').toList();
+    } else if (selectedTabIndex == 1) {
+      filteredTasks = tasks.where((task) => task['status'] == 'Normal').toList();
+    } else if (selectedTabIndex == 2) {
+      filteredTasks = tasks.where((task) => task['checklist'] == true).toList();
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: tasks.length,
+      itemCount: filteredTasks.length,
       itemBuilder: (context, index) {
-        final task = tasks[index];
+        final task = filteredTasks[index];
         return Card(
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
@@ -131,45 +260,22 @@ class _DashboardPageState extends State<DashboardPage> {
               task['title'],
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text(task['date']),
-            trailing: _buildTrailingIcon(),
+            subtitle: Text(task['dateline']),
+            trailing: _buildTrailingIcon(task),
           ),
         );
       },
     );
   }
 
-  Widget _buildTrailingIcon() {
-    switch (selectedTabIndex) {
-      case 0:
-        return const Icon(Icons.emergency, color: Colors.red, size: 28);
-      case 1:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.green[200],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text("Confirmed", style: TextStyle(fontSize: 12)),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.grey[400],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text("Done", style: TextStyle(fontSize: 12)),
-            ),
-          ],
-        );
-      case 2:
-        return const Icon(Icons.check, color: Colors.green, size: 28);
-      default:
-        return const SizedBox();
+  // ฟังก์ชันแสดงไอคอนสำหรับแต่ละสถานะ
+  Widget _buildTrailingIcon(Map<String, dynamic> task) {
+    if (task['status'] == 'Do Now!') {
+      return const Icon(Icons.emergency, color: Colors.red, size: 28);
+    } else if (task['status'] == 'Normal') {
+      return const Icon(Icons.mail, color: Colors.yellow, size: 28);
+    } else {
+      return const Icon(Icons.check, color: Colors.green, size: 28);
     }
   }
 }

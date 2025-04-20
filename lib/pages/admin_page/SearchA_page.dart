@@ -11,6 +11,7 @@ class SearchAPage extends StatefulWidget {
 
 class _SearchAPageState extends State<SearchAPage> {
   String searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   final List<Map<String, String>> topPlaces = [
     {
@@ -48,12 +49,12 @@ class _SearchAPageState extends State<SearchAPage> {
 
   final List<Map<String, String>> tagsPlaces = [
     {
-      'name': 'คลินิกสัตวแพทย์ A',
+      'name': '#คลินิกสัตวแพทย์ A',
       'address': 'ถนนสุขสวัสดิ์',
       'image': 'loca1.png',
     },
     {
-      'name': 'คลินิกสัตวแพทย์ B',
+      'name': '#คลินิกสัตวแพทย์ B',
       'address': 'กรุงเทพฯ',
       'image': 'loca1.png',
     },
@@ -67,7 +68,7 @@ class _SearchAPageState extends State<SearchAPage> {
         backgroundColor: const Color(0xFFDE712C),
         title: const Text("Explore", style: TextStyle(color: Colors.black)),
         centerTitle: true,
-        automaticallyImplyLeading: false, // ปิดปุ่มลูกศรย้อนกลับ
+        automaticallyImplyLeading: false,
       ),
       body: SafeArea(
         child: Column(
@@ -91,6 +92,7 @@ class _SearchAPageState extends State<SearchAPage> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: TextField(
+                              controller: _searchController,
                               onChanged: (value) {
                                 setState(() {
                                   searchQuery = value;
@@ -117,6 +119,8 @@ class _SearchAPageState extends State<SearchAPage> {
                     onTap: () {
                       setState(() {
                         searchQuery = '';
+                        _searchController.clear();
+                        FocusScope.of(context).unfocus(); // ปิดคีย์บอร์ดด้วย
                       });
                     },
                     child: const Text(

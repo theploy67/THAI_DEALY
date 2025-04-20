@@ -5,7 +5,7 @@ import 'dart:convert';
 
 class NoteAddPage extends StatefulWidget {
   final DateTime dateline;
-  const NoteAddPage({super.key, required this.dateline}); // ✅ มี required
+  const NoteAddPage({super.key, required this.dateline});
 
   @override
   State<NoteAddPage> createState() => _NoteAddPageState();
@@ -25,19 +25,19 @@ class _NoteAddPageState extends State<NoteAddPage> {
   late DateTime _datelineDate;
 
   // ตัวแปรสำหรับสถานะ
-  String _status = 'Normal'; // ใช้สำหรับสถานะงาน (ด่วน / ปกติ)
+  String _status = 'Normal';
 
   // ตัวแปรสำหรับเลือกบริษัท
-  String _company = 'บริษัทA'; // Default คือ บริษัทA
+  String _company = 'บริษัทA';
 
   // ตัวแปรสำหรับเลือกประเภทของงาน
-  String _category = 'ติดตั้งเครื่อง'; // Default คือ ติดตั้งเครื่อง
+  String _category = 'งานติดตั้ง';
 
   @override
   void initState() {
     super.initState();
-    _lastModifiedDate = DateTime.now(); // กำหนดเป็นวันที่ปัจจุบัน
-    _datelineDate = widget.dateline; // ใช้ค่าที่ส่งมา
+    _lastModifiedDate = DateTime.now();
+    _datelineDate = widget.dateline;
   }
 
   Future<void> _saveNote() async {
@@ -48,7 +48,6 @@ class _NoteAddPageState extends State<NoteAddPage> {
       return;
     }
 
-    // ตั้งค่า last_modified เป็นวันที่ปัจจุบัน (ไม่ต้องเลือกวันที่เอง)
     DateTime lastModified = DateTime.now(); // วันที่ที่กดบันทึก
 
     final url = Uri.parse("http://172.20.10.6:3000/notes");
@@ -60,17 +59,17 @@ class _NoteAddPageState extends State<NoteAddPage> {
         body: jsonEncode({
           'title': _titleController.text,
           'created_by': _createdByController.text,
-          'last_modified': lastModified.toIso8601String(), // ส่งวันที่ปัจจุบัน
-          'dateline': _datelineDate.toIso8601String(), // วันกำหนดที่เลือก
+          'last_modified': lastModified.toIso8601String(),
+          'dateline': _datelineDate.toIso8601String(),
           'sent_for': _sentForController.text,
           'contact': _contactController.text,
           'link_map': _linkMapController.text,
           'address': _addressController.text,
           'tel': _telController.text,
           'description': _descriptionController.text,
-          'status': _status, // ส่งสถานะไปด้วย
-          'company': _company, // ส่งชื่อบริษัทไปด้วย
-          'category': _category, // ส่งประเภทงานไปด้วย
+          'status': _status,
+          'company': _company,
+          'category': _category,
         }),
       );
 
@@ -97,7 +96,6 @@ class _NoteAddPageState extends State<NoteAddPage> {
     Navigator.pop(context);
   }
 
-  // ฟังก์ชันสำหรับเลือกวันที่สำหรับ dateline
   Future<void> _pickDateline() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -130,32 +128,25 @@ class _NoteAddPageState extends State<NoteAddPage> {
             children: [
               _buildTextField("Title", _titleController),
               _buildTextField("Created By", _createdByController),
-              // แสดงวันที่ปัจจุบันสำหรับ last_modified (ไม่ให้เลือก)
               _buildDateRow("Last Modified", _lastModifiedDate, () {}),
-              // ฟังก์ชันให้เลือกวันสำหรับ dateline
               _buildDateRow("Dateline", _datelineDate, _pickDateline),
               _buildTextField("Sent For", _sentForController),
               _buildTextField("Contact", _contactController),
               _buildTextField("Link Map", _linkMapController),
               _buildTextField("Address", _addressController),
               _buildTextField("Tel", _telController),
-              _buildTextField(
-                "Description / Remark",
-                _descriptionController,
-                maxLines: 4,
-              ),
+              _buildTextField("Description / Remark", _descriptionController, maxLines: 4),
               const SizedBox(height: 24),
 
               // ฟังก์ชันเลือกสถานะ
               DropdownButton<String>(
                 value: _status,
-                items:
-                    ['Normal', 'Do Now!'].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
+                items: ['Normal', 'Do Now!'].map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _status = value!;
@@ -166,13 +157,12 @@ class _NoteAddPageState extends State<NoteAddPage> {
               // ฟังก์ชันเลือกบริษัท
               DropdownButton<String>(
                 value: _company,
-                items:
-                    ['บริษัทA', 'บริษัทB'].map((String company) {
-                      return DropdownMenuItem<String>(
-                        value: company,
-                        child: Text(company),
-                      );
-                    }).toList(),
+                items: ['Xray2hand', 'ThaiDR','บริษัทA', 'บริษัทB'].map((String company) {
+                  return DropdownMenuItem<String>(
+                    value: company,
+                    child: Text(company),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _company = value!;
@@ -183,27 +173,28 @@ class _NoteAddPageState extends State<NoteAddPage> {
               // ฟังก์ชันเลือกประเภทงาน
               DropdownButton<String>(
                 value: _category,
-                items:
-                    [
-                      'ติดตั้งเครื่อง',
-                      'ซ่อมเครื่อง',
-                      'ส่งของ',
-                      'ตรวจงาน',
-                      'ซ่อมรถ',
-                    ].map((String category) {
-                      return DropdownMenuItem<String>(
-                        value: category,
-                        child: Row(
-                          children: [
-                            Icon(
-                              _getCategoryIcon(category),
-                            ), // แสดงไอคอนตามประเภทงาน
-                            const SizedBox(width: 8),
-                            Text(category),
-                          ],
+                items: [
+                  'งานติดตั้ง',
+                  'ซ่อมบำรุง',
+                  'ส่งของ',
+                  'ตรวจเช็ค',
+                  'อื่นๆ',
+                ].map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getCategoryIcon(category), // แสดงไอคอนตามประเภทงาน
+                          size: 20,
+                          color: Colors.black,
                         ),
-                      );
-                    }).toList(),
+                        const SizedBox(width: 8),
+                        Text(category),
+                      ],
+                    ),
+                  );
+                }).toList(),
                 onChanged: (value) {
                   setState(() {
                     _category = value!;
@@ -217,16 +208,12 @@ class _NoteAddPageState extends State<NoteAddPage> {
                 children: [
                   ElevatedButton(
                     onPressed: _saveNote,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                     child: const Text("Save"),
                   ),
                   ElevatedButton(
                     onPressed: _cancelInput,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     child: const Text("Cancel"),
                   ),
                 ],
@@ -238,11 +225,7 @@ class _NoteAddPageState extends State<NoteAddPage> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    int maxLines = 1,
-  }) {
+  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
@@ -273,21 +256,20 @@ class _NoteAddPageState extends State<NoteAddPage> {
     );
   }
 
-  // ฟังก์ชันเพื่อเลือกไอคอนตามประเภทงาน
   IconData _getCategoryIcon(String category) {
     switch (category) {
-      case 'ติดตั้งเครื่อง':
-        return Icons.build; // ไอคอนเครื่องมือ
-      case 'ซ่อมเครื่อง':
-        return Icons.build_circle; // ไอคอนเครื่องมือ
+      case 'งานติดตั้ง':
+        return Icons.build;
+      case 'ซ่อมบำรุง':
+        return Icons.build_circle;
       case 'ส่งของ':
-        return Icons.local_shipping; // ไอคอนส่งของ
-      case 'ตรวจงาน':
-        return Icons.check_circle_outline; // ไอคอนตรวจ
-      case 'ซ่อมรถ':
-        return Icons.car_repair; // ไอคอนซ่อมรถ
+        return Icons.local_shipping;
+      case 'ตรวจดช็ค':
+        return Icons.check_circle_outline;
+      case 'อื่นๆ':
+        return Icons.car_repair;
       default:
-        return Icons.help_outline; // ไอคอนอื่น ๆ
+        return Icons.help_outline;
     }
   }
 }

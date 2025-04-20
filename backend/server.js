@@ -22,6 +22,11 @@ db.connect(err => {
 
 // ฟังก์ชันช่วยแปลง ISO เป็น 'YYYY-MM-DD HH:MM:SS'
 function toMySQLDatetime(isoString) {
+  // ตรวจสอบว่า isoString มีค่าเป็น valid วันที่หรือไม่
+  if (!isoString || new Date(isoString).toString() === 'Invalid Date') {
+    console.error('❌ Invalid date:', isoString);
+    return null; // คืนค่า null หากเป็นวันที่ที่ไม่ถูกต้อง
+  }
   const date = new Date(isoString);
   return date.toISOString().slice(0, 19).replace('T', ' '); // แปลงวันที่ให้เป็นฟอร์แมตที่ MySQL ยอมรับ
 }
@@ -52,7 +57,7 @@ app.post('/notes', (req, res) => {
       note.description,
       note.status || 'Normal', // กำหนดสถานะเป็น 'Normal' ถ้าไม่มีการส่งค่า
       note.company || 'บริษัทA', // กำหนดบริษัทเป็น 'บริษัทA' ถ้าไม่มีการส่งค่า
-      note.category || 'ติดตั้งเครื่อง' // กำหนดประเภทงานเป็น 'ติดตั้งเครื่อง' ถ้าไม่มีการส่งค่า
+      note.category || 'งานติดตั้ง' // กำหนดประเภทงานเป็น 'ติดตั้งเครื่อง' ถ้าไม่มีการส่งค่า
     ]);
 
     db.query(sql, [values], (err, result) => {
@@ -82,7 +87,7 @@ app.post('/notes', (req, res) => {
       data.description,
       data.status || 'Normal', // กำหนดสถานะเป็น 'Normal' ถ้าไม่มีการส่งค่า
       data.company || 'บริษัทA', // กำหนดบริษัทเป็น 'บริษัทA' ถ้าไม่มีการส่งค่า
-      data.category || 'ติดตั้งเครื่อง' // กำหนดประเภทงานเป็น 'ติดตั้งเครื่อง' ถ้าไม่มีการส่งค่า
+      data.category || 'งานติดตั้ง' // กำหนดประเภทงานเป็น 'ติดตั้งเครื่อง' ถ้าไม่มีการส่งค่า
     ];
 
     db.query(sql, values, (err, result) => {
@@ -94,7 +99,6 @@ app.post('/notes', (req, res) => {
     });
   }
 });
-
 
 // ✅ ดึงข้อมูลทั้งหมดจากตาราง notes
 app.get('/notes', (req, res) => {
@@ -110,11 +114,16 @@ app.get('/notes', (req, res) => {
   });
 });
 
-
+// ✅ PUT /notes/:id → สำหรับ update โน้ต
 // ✅ PUT /notes/:id → สำหรับ update โน้ต
 app.put('/notes/:id', (req, res) => {
   const id = req.params.id;
   const data = req.body;
+
+  // ตรวจสอบค่าของข้อมูลที่จำเป็น
+  if (!data.title || !data.created_by || !data.last_modified || !data.dateline) {
+    return res.status(400).json({ error: 'Title, Created By, Last Modified, and Dateline are required' });
+  }
 
   const sql = `
     UPDATE notes SET
@@ -128,9 +137,9 @@ app.put('/notes/:id', (req, res) => {
       address = ?,
       tel = ?,
       description = ?,
-      status = ?,     -- เพิ่มการอัปเดตสถานะ
-      company = ?,    -- เพิ่มการอัปเดตชื่อบริษัท
-      category = ?    -- เพิ่มการอัปเดตประเภทงาน
+      status = ?,
+      company = ?,
+      category = ?
     WHERE id = ?
   `;
 
@@ -145,9 +154,9 @@ app.put('/notes/:id', (req, res) => {
     data.address,
     data.tel,
     data.description,
-    data.status,  // อัปเดตสถานะ
-    data.company, // อัปเดตชื่อบริษัท
-    data.category, // อัปเดตประเภทงาน
+    data.status || 'Normal',
+    data.company || 'บริษัทA',
+    data.category || 'งานติดตั้ง',
     id,
   ];
 
@@ -160,19 +169,61 @@ app.put('/notes/:id', (req, res) => {
   });
 });
 
-// ✅ DELETE /notes/:id → สำหรับลบโน้ต
-app.delete('/notes/:id', (req, res) => {
-  const noteId = req.params.id;
-  const sql = 'DELETE FROM notes WHERE id = ?';
 
-  db.query(sql, [noteId], (err, result) => {
+// ✅ PUT /notes/:id → สำหรับอัปเดตแค่ checklist
+app.put('/notes/:id', (req, res) => {
+  const id = req.params.id;
+  const data = req.body;
+
+  // ตรวจสอบค่าของ checklist
+  if (data.checklist === undefined) {
+    return res.status(400).json({ error: 'Checklist value is required' });
+  }
+
+  // ตรวจสอบค่าของ checklist และแปลงให้เป็น 1 หรือ 0
+  const checklist = data.checklist === true || data.checklist === 1 ? 1 : 0;
+
+  const sql = `
+    UPDATE notes SET
+      checklist = ? 
+    WHERE id = ?
+  `;
+
+  const values = [checklist, id];
+
+  db.query(sql, values, (err, result) => {
     if (err) {
-      console.error("❌ Delete error:", err);
-      return res.status(500).json({ error: "Delete failed" });
+      console.error('❌ Update error:', err);
+      return res.status(500).json({ error: 'Failed to update note' });
     }
-    res.json({ message: "🗑 Note deleted successfully" });
+    console.log('✅ Update success:', result); // log ผลลัพธ์จากการอัปเดต
+    res.status(200).json({ message: '✅ Note updated successfully' });
+  });
+  
+});
+
+// ฟังก์ชันลบ task ตาม id
+app.delete('/notes/:id', (req, res) => {
+  const { id } = req.params;
+
+  // SQL Query เพื่อทำการลบ task ตาม id
+  const sql = `DELETE FROM notes WHERE id = ?`;
+
+  db.query(sql, [id], (err, result) => {
+    if (err) {
+      console.error('❌ Error deleting task:', err);
+      return res.status(500).json({ error: 'Failed to delete task' });
+    }
+
+    if (result.affectedRows == 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.status(200).json({ message: '✅ Task deleted successfully' });
   });
 });
+
+
 
 app.listen(3000, () => {
   console.log('🚀 Server running at http://localhost:3000');

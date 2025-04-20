@@ -21,14 +21,18 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
   late TextEditingController _telController;
   late TextEditingController _descriptionController;
 
-  late DateTime _lastModifiedDate;
   late DateTime _datelineDate;
 
   bool _isEditing = false;
 
+  // สถานะที่สามารถเลือกได้
+  List<String> _statusOptions = ['Normal', 'Do Now!'];
+  List<String> _companyOptions = ['Xray2hand', 'ThaiDR','บริษัทA', 'บริษัทB'];
+  List<String> _categoryOptions = ['งานติดตั้ง', 'ซ่อมบำรุง','ส่งของ','ตรวจเช็ค', 'อื่นๆ'];
+
   String _status = 'Normal';
   String _company = 'บริษัทA';
-  String _category = 'ติดตั้งเครื่อง';
+  String _category = 'งานติดตั้ง';
 
   @override
   void initState() {
@@ -42,13 +46,12 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
     _telController = TextEditingController(text: widget.note['tel'] ?? '');
     _descriptionController = TextEditingController(text: widget.note['description'] ?? '');
 
-    _lastModifiedDate = DateTime.tryParse(widget.note['last_modified'] ?? '') ?? DateTime.now();
     _datelineDate = DateTime.tryParse(widget.note['dateline'] ?? '') ?? DateTime.now();
 
     // กำหนดค่าเริ่มต้นสำหรับสถานะ, บริษัท, และหมวดหมู่จากข้อมูลที่ได้รับ
-    _status = widget.note['status'] ?? 'Normal';
-    _company = widget.note['company'] ?? 'บริษัทA';
-    _category = widget.note['category'] ?? 'ติดตั้งเครื่อง';
+    _status = _statusOptions.contains(widget.note['status']) ? widget.note['status'] : _statusOptions[0];
+    _company = _companyOptions.contains(widget.note['company']) ? widget.note['company'] : _companyOptions[0];
+    _category = _categoryOptions.contains(widget.note['category']) ? widget.note['category'] : _categoryOptions[0];
   }
 
   Future<void> _updateNote() async {
@@ -61,8 +64,8 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
         body: jsonEncode({
           'title': _titleController.text,
           'created_by': _createdByController.text,
-          'last_modified': _lastModifiedDate.toIso8601String(),
-          'dateline': _datelineDate.toIso8601String(),
+          'last_modified': DateTime.now().toIso8601String(), // ใช้เวลาปัจจุบันอัตโนมัติ
+          'dateline': _datelineDate.toIso8601String(), // ใช้วันที่ที่เลือก + เวลา 23:59
           'sent_for': _sentForController.text,
           'contact': _contactController.text,
           'link_map': _linkMapController.text,
@@ -76,21 +79,15 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
       );
 
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Updated successfully")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Updated successfully")));
         setState(() {
           _isEditing = false;
         });
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Failed to update")));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Failed to update")));
       }
     } catch (error) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("An error occurred")));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("An error occurred")));
     }
   }
 
@@ -105,7 +102,6 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
       _addressController.text = widget.note['address'] ?? '';
       _telController.text = widget.note['tel'] ?? '';
       _descriptionController.text = widget.note['description'] ?? '';
-      _lastModifiedDate = DateTime.tryParse(widget.note['last_modified'] ?? '') ?? DateTime.now();
       _datelineDate = DateTime.tryParse(widget.note['dateline'] ?? '') ?? DateTime.now();
       _status = widget.note['status'] ?? 'Normal';
       _company = widget.note['company'] ?? 'บริษัทA';
@@ -116,7 +112,7 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
   Future<void> _pickDate({required bool isDateline}) async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: isDateline ? _datelineDate : _lastModifiedDate,
+      initialDate: isDateline ? _datelineDate : DateTime.now(), // เปลี่ยนให้เลือกวันที่ได้ตามที่ต้องการ
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
@@ -124,9 +120,7 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
     if (pickedDate != null) {
       setState(() {
         if (isDateline) {
-          _datelineDate = pickedDate;
-        } else {
-          _lastModifiedDate = pickedDate;
+          _datelineDate = pickedDate.add(Duration(days: 1)); // เพิ่ม 1 วันให้กับ dateline
         }
       });
     }
@@ -158,29 +152,46 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              _buildTextField("Title", _titleController),
-              _buildTextField("Created By", _createdByController),
-              _buildDateRow("Last Modified", _lastModifiedDate, () {
-                if (_isEditing) _pickDate(isDateline: false);
-              }),
+              _buildTextField("Title", _titleController, readOnly: !_isEditing),
+              _buildTextField("Created By", _createdByController, readOnly: !_isEditing),
+              // ลบ last_modified ออกไป
+              _buildTextField("Last Modified", TextEditingController(text: DateFormat('yyyy-MM-dd').format(DateTime.now())), readOnly: true), // ปิดการแก้ไข
               _buildDateRow("Dateline", _datelineDate, () {
                 if (_isEditing) _pickDate(isDateline: true);
               }),
-              _buildTextField("Sent For", _sentForController),
-              _buildTextField("Contact", _contactController),
-              _buildTextField("Link Map", _linkMapController),
-              _buildTextField("Address", _addressController),
-              _buildTextField("Tel", _telController),
-              _buildTextField(
-                "Description / Remark",
-                _descriptionController,
-                maxLines: 4,
-              ),
+              _buildTextField("Sent For", _sentForController, readOnly: !_isEditing),
+              _buildTextField("Contact", _contactController, readOnly: !_isEditing),
+              _buildTextField("Link Map", _linkMapController, readOnly: !_isEditing),
+              _buildTextField("Address", _addressController, readOnly: !_isEditing),
+              _buildTextField("Tel", _telController, readOnly: !_isEditing),
+              _buildTextField("Description / Remark", _descriptionController, maxLines: 4, readOnly: !_isEditing),
 
-              // การแสดงสถานะ
-              _buildTextField("Status", TextEditingController(text: _status), readOnly: true),
-              _buildTextField("Company", TextEditingController(text: _company), readOnly: true),
-              _buildTextField("Category", TextEditingController(text: _category), readOnly: true),
+              // สถานะ
+              _isEditing
+                  ? _buildDropdown("Status", _status, _statusOptions, (value) {
+                      setState(() {
+                        _status = value!;
+                      });
+                    })
+                  : _buildTextField("Status", TextEditingController(text: _status), readOnly: true),
+
+              // บริษัท
+              _isEditing
+                  ? _buildDropdown("Company", _company, _companyOptions, (value) {
+                      setState(() {
+                        _company = value!;
+                      });
+                    })
+                  : _buildTextField("Company", TextEditingController(text: _company), readOnly: true),
+
+              // หมวดหมู่
+              _isEditing
+                  ? _buildDropdown("Category", _category, _categoryOptions, (value) {
+                      setState(() {
+                        _category = value!;
+                      });
+                    })
+                  : _buildTextField("Category", TextEditingController(text: _category), readOnly: true),
 
               const SizedBox(height: 24),
               if (_isEditing)
@@ -210,18 +221,13 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
     );
   }
 
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    int maxLines = 1,
-    bool readOnly = false,
-  }) {
+  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, bool readOnly = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextField(
         controller: controller,
         maxLines: maxLines,
-        readOnly: readOnly, // ปรับให้เป็นอ่านได้เมื่อไม่อยู่ในโหมดแก้ไข
+        readOnly: readOnly,
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
@@ -244,6 +250,26 @@ class _NoteADetailPageState extends State<NoteADetailPage> {
               onPressed: onPressed,
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown(String label, String value, List<String> items, Function(String?) onChanged) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DropdownButtonFormField<String>(
+        value: value, // ค่าที่ได้รับจากการ PUT ข้อมูล
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        items: items.map((String item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: _isEditing ? onChanged : null, // เมื่อไม่อยู่ในโหมดแก้ไขจะไม่สามารถเลือกได้
       ),
     );
   }

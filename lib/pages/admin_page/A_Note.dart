@@ -26,7 +26,6 @@ class _A_NoteState extends State<A_Note> {
   // ฟังก์ชันในการดึงข้อมูลโน้ตจาก API
   Future<void> fetchNotes() async {
     final response = await http.get(
-      // Uri.parse('http://192.168.1.17:3000/notes'), // ✅  IP Home
       Uri.parse('http://172.20.10.6:3000/notes'), // ✅ ใช้ IP Yolp
     );
 
@@ -64,18 +63,17 @@ class _A_NoteState extends State<A_Note> {
     );
 
     if (confirm == true) {
-      //final url = Uri.parse('http://192.168.1.17:3000/notes/$id');
       final url = Uri.parse('http://172.20.10.6:3000/notes/$id');
       final response = await http.delete(url);
       if (response.statusCode == 200) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("ลบโน้ต \"$title\" แล้ว")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("ลบโน้ต \"$title\" แล้ว")),
+        );
         fetchNotes(); // โหลดข้อมูลใหม่หลังจากลบ
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("ลบไม่สำเร็จ")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("ลบไม่สำเร็จ")),
+        );
       }
     }
   }
@@ -83,31 +81,17 @@ class _A_NoteState extends State<A_Note> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final startOfWeek = now.subtract(
-      Duration(days: now.weekday - 1),
-    ); // วันจันทร์ของสัปดาห์นี้
-    final endOfWeek = startOfWeek.add(
-      Duration(days: 7),
-    ); // วันอาทิตย์ของสัปดาห์นี้
-    final startOfMonth = DateTime(
-      now.year,
-      now.month,
-      1,
-    ); // วันที่ 1 ของเดือนนี้
-    final endOfMonth = DateTime(
-      now.year,
-      now.month + 1,
-      0,
-    ); // วันสุดท้ายของเดือนนี้
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1)); // วันจันทร์ของสัปดาห์นี้
+    final endOfWeek = startOfWeek.add(Duration(days: 7)); // วันอาทิตย์ของสัปดาห์นี้
+    final startOfMonth = DateTime(now.year, now.month, 1); // วันที่ 1 ของเดือนนี้
+    final endOfMonth = DateTime(now.year, now.month + 1, 0); // วันสุดท้ายของเดือนนี้
     final startOfYear = DateTime(now.year, 1, 1); // วันที่ 1 มกราคมของปีนี้
     final endOfYear = DateTime(now.year + 1, 1, 0); // วันที่ 31 ธันวาคมของปีนี้
 
+    // กรองโน้ตตามเงื่อนไข title และ date
     final filteredNotes = notes.where((note) {
-      final titleMatch =
-          note['title']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
-
-      final date =
-          DateTime.tryParse(note['dateline'] ?? '') ?? DateTime(2000);
+      final titleMatch = note['title']?.toLowerCase().contains(searchQuery.toLowerCase()) ?? false;
+      final date = DateTime.tryParse(note['dateline'] ?? '') ?? DateTime(2000);
 
       bool dateMatch = false;
       switch (selectedFilter) {
@@ -115,8 +99,7 @@ class _A_NoteState extends State<A_Note> {
           dateMatch = date.isAfter(startOfWeek) && date.isBefore(endOfWeek);
           break;
         case 'เดือนนี้':
-          dateMatch =
-              date.isAfter(startOfMonth) && date.isBefore(endOfMonth);
+          dateMatch = date.isAfter(startOfMonth) && date.isBefore(endOfMonth);
           break;
         case 'ปีนี้':
           dateMatch = date.isAfter(startOfYear) && date.isBefore(endOfYear);
@@ -207,9 +190,7 @@ class _A_NoteState extends State<A_Note> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Last Modified: ${DateFormat('dd MMM yyyy').format(lastModified)}",
-                          ),
+                          Text("Last Modified: ${DateFormat('dd MMM yyyy').format(lastModified)}"),
                           Text("Sent For: ${note['sent_for']}"),
                           Text("Status: ${note['status']}"),
                         ],
