@@ -31,3 +31,10 @@ page for User
 • 4. Note Detail For User 
 • 5. About Us Page
 
+ขั้นตอนการเรียกใช้งาน
+1. flutter pub get
+2. nmp nodemon
+3. copy path backend
+4. paste path to terminal enter
+5. node server.js
+
